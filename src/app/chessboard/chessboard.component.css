@@ -20,9 +20,23 @@
   }
   .square.dark {
     background-color: #4466c5;  /* Dark squares */
-  }.
+  }
 
   .square.selected {
     border: 2px solid rgb(0, 0, 0);  /* Highlight square */
   }
 
+  .controls {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .piece {
+    font-size: 2em;
+    color: black;
+  }
+  
+  .square.white .piece {
+    color: white;
+  }
+  
