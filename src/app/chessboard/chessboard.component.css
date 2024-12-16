@@ -22,4 +22,7 @@
     background-color: #4466c5;  /* Dark squares */
   }.
 
-  
+  .square.selected {
+    border: 2px solid rgb(0, 0, 0);  /* Highlight square */
+  }
+
