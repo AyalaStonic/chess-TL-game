@@ -37,8 +37,8 @@ export class ChessboardComponent implements OnInit {
       console.log('Invalid move');
       return;
     }
-    this.updateBoard();
-    console.log(this.game.fen());
+    this.updateBoard(); // Refresh the board after a successful move
+    console.log(this.game.fen()); // Log the current game state
   }
 
   // Reset the game, including clearing the selected piece
@@ -68,10 +68,12 @@ export class ChessboardComponent implements OnInit {
       if (move === null) {
         console.log('Invalid move');
       } else {
-        this.updateBoard(); // Refresh the board after a successful move
+        // If the move is successful, update the board
+        this.updateBoard();
       }
 
-      this.selectedSquare = null; // Deselect after making the move
+      // Clear the selected square after a move
+      this.selectedSquare = null;
     } else {
       // If there's no selected square, select the current square
       const piece = this.game.get(square as any);  // Cast 'square' to any type to avoid TS error
