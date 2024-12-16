@@ -1,1 +1,10 @@
-<p>chessboard works!</p>
+<div class="chessboard">
+    <div *ngFor="let row of boardState; let rowIndex = index">
+      <div *ngFor="let cell of row; let colIndex = index" 
+           class="square" 
+           [ngClass]="[getSquareClass(rowIndex, colIndex), selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : '']"
+           (click)="onSquareClick(rowIndex, colIndex)">
+        <span *ngIf="cell" class="piece">{{ cell | uppercase }}</span>
+      </div>
+    </div>
+  </div>
