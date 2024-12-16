@@ -41,9 +41,11 @@ export class ChessboardComponent implements OnInit {
     console.log(this.game.fen());
   }
 
+  // Reset the game, including clearing the selected piece
   resetGame() {
-    this.game.reset();
-    this.updateBoard();
+    this.game.reset();  // Reset the game state
+    this.selectedSquare = null;  // Clear the selected square
+    this.updateBoard();  // Refresh the board after reset
   }
 
   // Get the square class for alternating colors
