@@ -1,12 +1,14 @@
+// src/app/app.component.ts
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChessboardComponent } from './chessboard/chessboard.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'],
+  standalone: true,  // Make this component standalone
+  imports: [ChessboardComponent]  // Import ChessboardComponent directly here
 })
 export class AppComponent {
-  title = 'chess-tl-game';
+  title = 'chess-game';
 }
