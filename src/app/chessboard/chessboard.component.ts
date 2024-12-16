@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-chessboard',
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
+  standalone: true,
   imports: [CommonModule]  // Include CommonModule for Angular directives like *ngFor, *ngIf
 })
 export class ChessboardComponent implements OnInit {
