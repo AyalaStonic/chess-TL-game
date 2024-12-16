@@ -14,3 +14,12 @@
     align-items: center;
     cursor: pointer;
   }
+
+  .square.light {
+    background-color: #e4f0ef;  /* Light TL squares */
+  }
+  .square.dark {
+    background-color: #4466c5;  /* Dark squares */
+  }.
+
+  
