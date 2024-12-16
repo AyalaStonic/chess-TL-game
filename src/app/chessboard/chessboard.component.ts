@@ -7,14 +7,14 @@ import { CommonModule } from '@angular/common';
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
   standalone: true,
-  imports: [CommonModule]  // Include CommonModule for Angular directives like *ngFor, *ngIf
+  imports: [CommonModule]
 })
 export class ChessboardComponent implements OnInit {
   board: any;
   game: Chess;
-  boardState: any[];
-  selectedSquare: string | null = null; // Track selected square
-  isMoveValid: boolean = true; // Track the validity of the move
+  boardState: any[]; 
+  selectedSquare: string | null = null;  // Track selected square
+  invalidMoveMessage: string | null = null;  // Store invalid move message
 
   constructor() {
     this.game = new Chess();
@@ -22,37 +22,39 @@ export class ChessboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.updateBoard();
+    this.updateBoard(); // Ensure the board is updated when the component loads
   }
 
+  // Update the board state from the game object
   updateBoard() {
     const board = this.game.board();
     this.boardState = board.map((row: any) =>
-      row.map((piece: any) => (piece ? piece.type : null))
+      row.map((piece: any) => (piece ? piece.type : null))  // Only show piece type (e.g., p, r, n, etc.)
     );
   }
 
+  // Handle making a move
   makeMove(from: string, to: string) {
     const move = this.game.move({ from, to });
-    
-    // Check if the move is valid
+
+    // Handle invalid moves
     if (move === null) {
-      this.isMoveValid = false;  // Move is invalid
-      return false;  // Exit the function early
+      this.invalidMoveMessage = 'Invalid move! Try again.';
+      console.log('Invalid move');
+      return;
     }
 
-    this.isMoveValid = true;  // Reset move validity
-    this.updateBoard();  // Refresh the board after a successful move
-    console.log(this.game.fen()); // Log the current game state
-    return true;
+    this.invalidMoveMessage = null; // Clear invalid move message
+    this.updateBoard(); // Update the board after a valid move
+    console.log(this.game.fen());
   }
 
-  // Reset the game, including clearing the selected piece
+  // Reset the game
   resetGame() {
-    this.game.reset();  // Reset the game state
-    this.selectedSquare = null;  // Clear the selected square
-    this.isMoveValid = true;  // Reset move validity
-    this.updateBoard();  // Refresh the board after reset
+    this.game.reset();          // Reset the chess game state
+    this.updateBoard();         // Update the board after reset
+    this.selectedSquare = null; // Clear the selected square
+    this.invalidMoveMessage = null;  // Clear any invalid move message
   }
 
   // Get the square class for alternating colors
@@ -65,32 +67,39 @@ export class ChessboardComponent implements OnInit {
   onSquareClick(rowIndex: number, colIndex: number) {
     const square: string = this.getSquareFromIndices(rowIndex, colIndex);
 
+    // If the player clicks on the same square again (i.e., deselect the piece)
+    if (this.selectedSquare === square) {
+      this.selectedSquare = null;  // Deselect the square
+      this.invalidMoveMessage = null;  // Clear any previous invalid move message
+      return;
+    }
+
+    // If a square is already selected, try to make a move
     if (this.selectedSquare) {
-      // If there's already a selected square, attempt to make the move
       const move = this.game.move({
         from: this.selectedSquare,
         to: square,
       });
 
-      // Handle invalid move
+      // Check if the move is invalid
       if (move === null) {
-        this.isMoveValid = false; // Move is invalid
-        console.log("Invalid move!");
-      } else {
-        // If the move is successful, update the board
-        this.updateBoard();
-        this.isMoveValid = true; // Reset move validity
+        this.invalidMoveMessage = 'Invalid move! Try again.';
+        console.log('Invalid move from', this.selectedSquare, 'to', square);
+        
+        // Do not update the board or clear the selected square on invalid move
+        return;
       }
 
-      // Clear the selected square after a move (whether valid or invalid)
-      this.selectedSquare = null;
+      // If move is valid, update the board
+      this.invalidMoveMessage = null; // Clear invalid move message
+      this.updateBoard(); // Update the board after the valid move
+      this.selectedSquare = null; // Deselect the square after making the move
     } else {
       // If there's no selected square, select the current square
-      const piece = this.game.get(square as any);  // Cast 'square' to any type to avoid TS error
+      const piece = this.game.get(square as any);
 
       if (piece) {
-        // If there's a piece on the selected square, select it
-        this.selectedSquare = square;
+        this.selectedSquare = square; // Select the square if it contains a piece
       }
     }
   }

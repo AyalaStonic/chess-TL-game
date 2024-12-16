@@ -1,14 +1,23 @@
-.chessboard {
+
+html, body {
+    height: 100%;        /* Full height */
+    margin: 0;           /* Remove default margin */
+    display: flex;       /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    background-color: #f5f5f5; /* Optional background color */
+  }
+  
+  .chessboard {
     display: grid;
-    grid-template-columns: repeat(10, 50px);
-    grid-template-rows: repeat(10, 50px);
+    grid-template-columns: repeat(8, 100px); /* 8 columns for chessboard */
+    grid-template-rows: repeat(8, 100px);    /* 8 rows for chessboard */
     gap: 0;
-    margin: 100px auto;
   }
   
   .square {
-    width: 50px;
-    height: 50px;
+    width: 100px;
+    height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -39,14 +48,5 @@
   
   .square.white .piece {
     color: white;
-  }
-  
-  /* Display an error message when a move is invalid */
-.error-message {
-    color: red;
-    font-size: 18px;
-    text-align: center;
-    margin-bottom: 10px;
-    font-weight: bold;
   }
   
