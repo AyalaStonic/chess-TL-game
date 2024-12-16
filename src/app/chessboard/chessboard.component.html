@@ -1,14 +1,18 @@
-<div class="chessboard">
-    <div *ngFor="let row of boardState; let rowIndex = index">
-      <div *ngFor="let cell of row; let colIndex = index" 
-           class="square" 
-           [ngClass]="[getSquareClass(rowIndex, colIndex), selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : '']"
-           (click)="onSquareClick(rowIndex, colIndex)">
-        <span *ngIf="cell" class="piece">{{ cell | uppercase }}</span>
+<!-- chessboard.component.html -->
+<div *ngIf="!isMoveValid" class="error-message">
+    Invalid move! Please try again.
+  </div>
+  
+  <div class="board-container">
+    <div class="board">
+      <div *ngFor="let row of boardState; let rowIndex = index">
+        <div *ngFor="let square of row; let colIndex = index"
+             class="square"
+             [ngClass]="getSquareClass(rowIndex, colIndex)"
+             (click)="onSquareClick(rowIndex, colIndex)">
+          <div *ngIf="square" class="piece">{{ square }}</div>
+        </div>
       </div>
     </div>
   </div>
-
-  <div class="controls">
-    <button (click)="resetGame()">Restart</button>
-  </div>
+  

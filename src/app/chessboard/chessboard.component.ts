@@ -14,6 +14,7 @@ export class ChessboardComponent implements OnInit {
   game: Chess;
   boardState: any[];
   selectedSquare: string | null = null; // Track selected square
+  isMoveValid: boolean = true; // Track the validity of the move
 
   constructor() {
     this.game = new Chess();
@@ -33,18 +34,24 @@ export class ChessboardComponent implements OnInit {
 
   makeMove(from: string, to: string) {
     const move = this.game.move({ from, to });
+    
+    // Check if the move is valid
     if (move === null) {
-      console.log('Invalid move');
-      return;
+      this.isMoveValid = false;  // Move is invalid
+      return false;  // Exit the function early
     }
-    this.updateBoard(); // Refresh the board after a successful move
+
+    this.isMoveValid = true;  // Reset move validity
+    this.updateBoard();  // Refresh the board after a successful move
     console.log(this.game.fen()); // Log the current game state
+    return true;
   }
 
   // Reset the game, including clearing the selected piece
   resetGame() {
     this.game.reset();  // Reset the game state
     this.selectedSquare = null;  // Clear the selected square
+    this.isMoveValid = true;  // Reset move validity
     this.updateBoard();  // Refresh the board after reset
   }
 
@@ -65,14 +72,17 @@ export class ChessboardComponent implements OnInit {
         to: square,
       });
 
+      // Handle invalid move
       if (move === null) {
-        console.log('Invalid move');
+        this.isMoveValid = false; // Move is invalid
+        console.log("Invalid move!");
       } else {
         // If the move is successful, update the board
         this.updateBoard();
+        this.isMoveValid = true; // Reset move validity
       }
 
-      // Clear the selected square after a move
+      // Clear the selected square after a move (whether valid or invalid)
       this.selectedSquare = null;
     } else {
       // If there's no selected square, select the current square

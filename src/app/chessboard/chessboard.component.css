@@ -1,11 +1,11 @@
 .chessboard {
     display: grid;
-    grid-template-columns: repeat(8, 50px);
-    grid-template-rows: repeat(8, 50px);
+    grid-template-columns: repeat(10, 50px);
+    grid-template-rows: repeat(10, 50px);
     gap: 0;
     margin: 100px auto;
   }
-
+  
   .square {
     width: 50px;
     height: 50px;
@@ -14,18 +14,19 @@
     align-items: center;
     cursor: pointer;
   }
-
+  
   .square.light {
-    background-color: #e4f0ef;  /* Light TL squares */
+    background-color: #e4f0ef;  /* Light squares */
   }
+  
   .square.dark {
     background-color: #4466c5;  /* Dark squares */
   }
-
+  
   .square.selected {
-    border: 2px solid rgb(0, 0, 0);  /* Highlight square */
+    border: 2px solid rgb(0, 0, 0);  /* Highlight selected square */
   }
-
+  
   .controls {
     text-align: center;
     margin-top: 20px;
@@ -38,5 +39,14 @@
   
   .square.white .piece {
     color: white;
+  }
+  
+  /* Display an error message when a move is invalid */
+.error-message {
+    color: red;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: bold;
   }
   
