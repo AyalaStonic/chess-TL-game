@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "X5ZaKufHnEwa8Jr+o2Z5O4dAX7sTmlppopmHv5MuQiE=",
+  "Source": "ChessBackend",
+  "BasePath": "_content/ChessBackend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

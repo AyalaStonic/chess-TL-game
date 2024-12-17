@@ -1,110 +1,133 @@
-import { Component, OnInit } from '@angular/core'; 
+import { Component, OnInit } from '@angular/core';
 import { Chess } from 'chess.js';
-import { CommonModule } from '@angular/common';
+import { ChessService } from '../chess.service'; // Import ChessService
 
 @Component({
   selector: 'app-chessboard',
+  standalone: true,  // Mark this component as standalone
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
-  standalone: true,
-  imports: [CommonModule]
 })
 export class ChessboardComponent implements OnInit {
-  board: any;
+  boardState: any[] = [];
   game: Chess;
-  boardState: any[]; 
-  selectedSquare: string | null = null;  // Track selected square
-  invalidMoveMessage: string | null = null;  // Store invalid move message
+  selectedSquare: string | null = null;
+  invalidMoveMessage: string | null = null;
+  gameId: number = 1; // Placeholder game ID, can be set dynamically
+  moves: any[] = [];  // Array to hold game moves
 
-  constructor() {
+  constructor(private chessService: ChessService) {
     this.game = new Chess();
-    this.boardState = [];
   }
 
   ngOnInit(): void {
-    this.updateBoard(); // Ensure the board is updated when the component loads
+    this.updateBoard();
+    this.loadGameMoves();
   }
 
-  // Update the board state from the game object
   updateBoard() {
     const board = this.game.board();
     this.boardState = board.map((row: any) =>
-      row.map((piece: any) => (piece ? piece.type : null))  // Only show piece type (e.g., p, r, n, etc.)
+      row.map((piece: any) => (piece ? piece.type : null))
     );
   }
 
-  // Handle making a move
   makeMove(from: string, to: string) {
     const move = this.game.move({ from, to });
-
-    // Handle invalid moves
     if (move === null) {
       this.invalidMoveMessage = 'Invalid move! Try again.';
-      console.log('Invalid move');
       return;
     }
-
-    this.invalidMoveMessage = null; // Clear invalid move message
-    this.updateBoard(); // Update the board after a valid move
-    console.log(this.game.fen());
+    this.invalidMoveMessage = null;
+    this.updateBoard();
+    this.saveMoveToDatabase(from, to, move.piece);
   }
 
-  // Reset the game
+  saveMoveToDatabase(from: string, to: string, piece: string) {
+    const move = {
+      gameId: this.gameId,
+      fromSquare: from,
+      toSquare: to,
+      pieceType: piece,
+    };
+
+    this.chessService.saveMove(move).subscribe({
+      next: (response) => {
+        console.log('Move saved:', response);
+      },
+      error: (err) => {
+        console.error('Error saving move:', err);
+      },
+    });
+  }
+
+  loadGameMoves() {
+    this.chessService.getGameMoves(this.gameId).subscribe({
+      next: (moves) => {
+        this.moves = moves;
+        this.replayGame();
+      },
+      error: (err) => {
+        console.error('Error loading moves:', err);
+      },
+    });
+  }
+
+  replayGame() {
+    this.moves.forEach((move, index) => {
+      setTimeout(() => {
+        this.game.move({
+          from: move.fromSquare,
+          to: move.toSquare,
+        });
+        this.updateBoard();
+      }, 1000 * index); // Delay between moves
+    });
+  }
+
   resetGame() {
-    this.game.reset();          // Reset the chess game state
-    this.updateBoard();         // Update the board after reset
-    this.selectedSquare = null; // Clear the selected square
-    this.invalidMoveMessage = null;  // Clear any invalid move message
+    this.game.reset();
+    this.updateBoard();
+    this.selectedSquare = null;
+    this.invalidMoveMessage = null;
   }
 
-  // Get the square class for alternating colors
   getSquareClass(rowIndex: number, colIndex: number): string {
-    const isDarkSquare = (rowIndex + colIndex) % 2 === 1;
-    return isDarkSquare ? 'dark' : 'light';  // Return different class based on square color
+    return (rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark';
   }
 
-  // Handle square click logic
   onSquareClick(rowIndex: number, colIndex: number) {
-    const square: string = this.getSquareFromIndices(rowIndex, colIndex);
+    const square = this.getSquareFromIndices(rowIndex, colIndex);
 
-    // If the player clicks on the same square again (i.e., deselect the piece)
     if (this.selectedSquare === square) {
-      this.selectedSquare = null;  // Deselect the square
-      this.invalidMoveMessage = null;  // Clear any previous invalid move message
+      this.selectedSquare = null;
+      this.invalidMoveMessage = null;
       return;
     }
 
-    // If a square is already selected, try to make a move
     if (this.selectedSquare) {
       const move = this.game.move({
         from: this.selectedSquare,
         to: square,
       });
 
-      // Check if the move is invalid
       if (move === null) {
         this.invalidMoveMessage = 'Invalid move! Try again.';
-        console.log('Invalid move from', this.selectedSquare, 'to', square);
-        
-        // Do not update the board or clear the selected square on invalid move
         return;
       }
 
-      // If move is valid, update the board
-      this.invalidMoveMessage = null; // Clear invalid move message
-      this.updateBoard(); // Update the board after the valid move
-      this.selectedSquare = null; // Deselect the square after making the move
+      this.invalidMoveMessage = null;
+      this.updateBoard();
+      this.selectedSquare = null;
+      this.saveMoveToDatabase(this.selectedSquare, square, move.piece);
     } else {
-      // If there's no selected square, select the current square
       const piece = this.game.get(square as any);
-
       if (piece) {
-        this.selectedSquare = square; // Select the square if it contains a piece
+        this.selectedSquare = square;
       }
     }
   }
 
-  // Convert row/column indices to chess notation (e.g., 'a1', 'b3', etc.)
   getSquareFromIndices(rowIndex: number, colIndex: number): string {
     const file = String.fromCharCode(97 + colIndex); // 'a' to 'h'
     const rank = 8 - rowIndex; // 8 to 1
