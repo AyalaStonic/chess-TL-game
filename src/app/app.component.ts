@@ -11,3 +11,4 @@ import { ChessboardComponent } from './chessboard/chessboard.component';  // Cor
 export class AppComponent {
   title = 'chess-game';
 }
+f
