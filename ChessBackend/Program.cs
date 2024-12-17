@@ -1,60 +1,41 @@
-﻿// Ensure that all using directives are at the top, before any class or code.
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 
 namespace ChessBackend
 {
-    class Program
+    [ApiController]
+    [Route("api/[controller]")]
+    public class GameController : ControllerBase
     {
-        static string connectionString = "Server=your_server_name;Database=ChessGame;Trusted_Connection=True;";  // Change connection string
+        private static string connectionString = "Server=your_server_name;Database=ChessGame;Trusted_Connection=True;";
 
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Welcome to the Chess Game Backend!");
-
-            // Example move to add to the database
-            var move = new GameMove
-            {
-                FromSquare = "e2",
-                ToSquare = "e4",
-                Piece = "p"
-            };
-
-            // Insert the move into the database
-            InsertMove(move);
-
-            // Get and display all moves
-            var moves = GetAllMoves();
-            foreach (var m in moves)
-            {
-                Console.WriteLine($"{m.MoveTime}: {m.Piece} from {m.FromSquare} to {m.ToSquare}");
-            }
-        }
-
-        // Insert a move into the database
-        static void InsertMove(GameMove move)
+        [HttpPost]
+        public IActionResult SaveMove([FromBody] GameMove move)
         {
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                var query = "INSERT INTO GameMoves (FromSquare, ToSquare, Piece) VALUES (@FromSquare, @ToSquare, @Piece)";
+                var query = "INSERT INTO GameMoves (FromSquare, ToSquare, Piece, GameId, UserId) VALUES (@FromSquare, @ToSquare, @Piece, @GameId, @UserId)";
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@FromSquare", move.FromSquare);
                     command.Parameters.AddWithValue("@ToSquare", move.ToSquare);
                     command.Parameters.AddWithValue("@Piece", move.Piece);
+                    command.Parameters.AddWithValue("@GameId", move.GameId);
+                    command.Parameters.AddWithValue("@UserId", move.UserId);
 
                     command.ExecuteNonQuery();
                 }
             }
 
-            Console.WriteLine("Move inserted successfully!");
+            return Ok("Move saved successfully!");
         }
 
-        // Get all moves from the database
-        static List<GameMove> GetAllMoves()
+        [HttpGet("{gameId}")]
+        public IActionResult GetMoves(int gameId)
         {
             var moves = new List<GameMove>();
 
@@ -62,9 +43,11 @@ namespace ChessBackend
             {
                 connection.Open();
 
-                var query = "SELECT * FROM GameMoves";
+                var query = "SELECT * FROM GameMoves WHERE GameId = @GameId ORDER BY MoveTime";
                 using (var command = new SqlCommand(query, connection))
                 {
+                    command.Parameters.AddWithValue("@GameId", gameId);
+
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -75,18 +58,48 @@ namespace ChessBackend
                                 MoveTime = (DateTime)reader["MoveTime"],
                                 FromSquare = reader["FromSquare"].ToString(),
                                 ToSquare = reader["ToSquare"].ToString(),
-                                Piece = reader["Piece"].ToString()
+                                Piece = reader["Piece"].ToString(),
+                                GameId = (int)reader["GameId"],
+                                UserId = (int)reader["UserId"]
                             });
                         }
                     }
                 }
             }
 
-            return moves;
+            return Ok(moves);
+        }
+
+        [HttpGet]
+        [Route("games")]
+        public IActionResult GetAllGames()
+        {
+            var games = new List<Game>();
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var query = "SELECT DISTINCT GameId FROM GameMoves";
+                using (var command = new SqlCommand(query, connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            games.Add(new Game
+                            {
+                                GameId = (int)reader["GameId"]
+                            });
+                        }
+                    }
+                }
+            }
+
+            return Ok(games);
         }
     }
 
-    // Define the GameMove model
     public class GameMove
     {
         public int Id { get; set; }
@@ -94,5 +107,12 @@ namespace ChessBackend
         public string FromSquare { get; set; }
         public string ToSquare { get; set; }
         public string Piece { get; set; }
+        public int GameId { get; set; }
+        public int UserId { get; set; }
+    }
+
+    public class Game
+    {
+        public int GameId { get; set; }
     }
 }

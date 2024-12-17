@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core'; 
 import { Chess } from 'chess.js';
 import { CommonModule } from '@angular/common';
 

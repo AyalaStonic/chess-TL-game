@@ -1,46 +1,71 @@
+/* General body styling */
 html, body {
-  height: 100%;          /* Full height */
-  margin: 0;             /* Remove default margin */
-  display: flex;         /* Use flexbox for centering */
-  justify-content: center; /* Center horizontally */
-  align-items: center;   /* Center vertically */
-  background-color: #f5f5f5; /* Optional background color */
+  height: 100%;              /* Full height */
+  margin: 0;                 /* Remove default margin */
+  display: flex;             /* Flexbox for centering */
+  justify-content: center;   /* Center horizontally */
+  align-items: center;       /* Center vertically */
+  background-color: #f5f5f5; /* Default light background color */
 }
 
+/* Chessboard container */
 .chessboard {
   display: grid;
-  grid-template-columns: repeat(8, 12vw); /* 8 columns for chessboard, responsive */
-  grid-template-rows: repeat(8, 12vw);    /* 8 rows for chessboard, responsive */
+  grid-template-columns: repeat(8, 12vw); /* 8 columns for chessboard */
+  grid-template-rows: repeat(8, 12vw);    /* 8 rows for chessboard */
   gap: 0;
+  border: 5px solid #333;                 /* Dark border around the chessboard */
+  border-radius: 8px;                     /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
 }
 
+/* Square styling */
 .square {
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s ease; /* Smooth transition for hover */
-  width: 100%;  /* Make squares fill the grid cell */
-  height: 100%; /* Make squares fill the grid cell */
+  transition: background-color 0.3s ease; /* Smooth hover transition */
+  width: 100%;  /* Fill the grid cell */
+  height: 100%; /* Fill the grid cell */
 }
 
+/* Light and dark squares */
 .square.light {
-  background-color: #e4f0ef;  /* Light squares */
+  background-color: #f3f3f3;  /* Light squares */
 }
 
 .square.dark {
   background-color: #4466c5;  /* Dark squares */
 }
 
+/* Hover effect on squares */
 .square:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Add hover effect */
+  background-color: rgba(0, 0, 0, 0.1); /* Hover effect */
 }
 
+/* Highlight selected square */
 .square.selected {
-  border: 3px solid rgba(0, 255, 255, 0.8);  /* Highlight selected square with a bright border */
+  border: 3px solid rgba(0, 255, 255, 0.8); /* Bright border */
   background-color: rgba(0, 255, 255, 0.2); /* Semi-transparent background */
 }
 
+/* Piece styling */
+.piece {
+  font-size: 3em;             /* Increased font size for visibility */
+  color: black;               /* Default color for pieces */
+  transition: transform 0.3s ease-in-out; /* Smooth animation for movement */
+}
+
+
+.square .piece img {
+  width: 70%;                 /* Adjust image size */
+  height: 70%;
+  margin: auto;               /* Center images */
+  object-fit: contain;        /* Keep images contained */
+}
+
+/* Controls section for buttons */
 .controls {
   text-align: center;
   margin-top: 20px;
@@ -67,18 +92,4 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.piece {
-  font-size: 3em;   /* Increased size for better readability */
-  color: black;     /* Default color for pieces */
-  transition: color 0.3s ease; /* Smooth transition for color change */
-}
 
-.square.dark .piece {
-  color: white;     /* Pieces on dark squares should be white */
-}
-
-.square .piece img {
-  width: 60%;
-  height: 60%;
-  object-fit: contain;  /* Ensure images are contained within the square */
-}
