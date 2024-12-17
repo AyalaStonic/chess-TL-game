@@ -1,28 +1,28 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';  // Import CommonModule
 import { Chess } from 'chess.js';
 import { ChessService } from '../chess.service'; // Import ChessService
 
+
 @Component({
   selector: 'app-chessboard',
-  standalone: true,  // Mark this component as standalone
+  standalone: true,  
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
+  imports: [CommonModule],  // Add CommonModule to imports
 })
-export class ChessboardComponent implements OnInit {
+export class ChessboardComponent {
   boardState: any[] = [];
   game: Chess;
-  selectedSquare: string | null = null;
+  selectedSquare: string | null = null;  // Allow null value
   invalidMoveMessage: string | null = null;
-  gameId: number = 1; // Placeholder game ID, can be set dynamically
-  moves: any[] = [];  // Array to hold game moves
 
-  constructor(private chessService: ChessService) {
+  constructor() {
     this.game = new Chess();
   }
 
   ngOnInit(): void {
     this.updateBoard();
-    this.loadGameMoves();
   }
 
   updateBoard() {
@@ -40,49 +40,6 @@ export class ChessboardComponent implements OnInit {
     }
     this.invalidMoveMessage = null;
     this.updateBoard();
-    this.saveMoveToDatabase(from, to, move.piece);
-  }
-
-  saveMoveToDatabase(from: string, to: string, piece: string) {
-    const move = {
-      gameId: this.gameId,
-      fromSquare: from,
-      toSquare: to,
-      pieceType: piece,
-    };
-
-    this.chessService.saveMove(move).subscribe({
-      next: (response) => {
-        console.log('Move saved:', response);
-      },
-      error: (err) => {
-        console.error('Error saving move:', err);
-      },
-    });
-  }
-
-  loadGameMoves() {
-    this.chessService.getGameMoves(this.gameId).subscribe({
-      next: (moves) => {
-        this.moves = moves;
-        this.replayGame();
-      },
-      error: (err) => {
-        console.error('Error loading moves:', err);
-      },
-    });
-  }
-
-  replayGame() {
-    this.moves.forEach((move, index) => {
-      setTimeout(() => {
-        this.game.move({
-          from: move.fromSquare,
-          to: move.toSquare,
-        });
-        this.updateBoard();
-      }, 1000 * index); // Delay between moves
-    });
   }
 
   resetGame() {
@@ -119,7 +76,6 @@ export class ChessboardComponent implements OnInit {
       this.invalidMoveMessage = null;
       this.updateBoard();
       this.selectedSquare = null;
-      this.saveMoveToDatabase(this.selectedSquare, square, move.piece);
     } else {
       const piece = this.game.get(square as any);
       if (piece) {

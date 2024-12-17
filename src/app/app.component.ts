@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { ChessboardComponent } from './chessboard/chessboard.component'; // Import the chessboard component
+import { ChessboardComponent } from './chessboard/chessboard.component';  // Correct the import path here
 
 @Component({
   selector: 'app-root',
-  standalone: true,  // Mark this component as standalone
+  standalone: true,  // Ensure this is set to true if it's a standalone component
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  imports: [ChessboardComponent], // Import the ChessboardComponent here
+  imports: [ChessboardComponent],  // Add the ChessboardComponent here
 })
 export class AppComponent {
   title = 'chess-game';
