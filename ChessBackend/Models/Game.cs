@@ -2,8 +2,9 @@ namespace ChessBackend.Models
 {
     public class Game
     {
-        public int GameId { get; set; }
-        public string? Move { get; set; }  // Make Move nullable to avoid the warning
-        public List<string> Moves { get; set; } = new List<string>();  // Initialize Moves
+        public int Id { get; set; }  // GameId equivalent
+        public required string Name { get; set; }
+        public required string Status { get; set; }
+        public List<string> Moves { get; set; } = new List<string>();  // Assuming Moves is a list of strings
     }
 }

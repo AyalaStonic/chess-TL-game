@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ChessService {
 
-  private apiUrl = 'http://localhost:5000/api/games';  // Your backend API URL
+  private apiUrl = 'http://localhost:5000/api/chess/games';  // Your backend API URL
 
   constructor(private http: HttpClient) { }
 

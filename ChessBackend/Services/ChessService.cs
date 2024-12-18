@@ -1,85 +1,60 @@
 using ChessBackend.Models;
-using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChessBackend.Services
 {
-    public class ChessService
+    public class ChessService : IChessService
     {
-        private readonly string _connectionString;
+        private readonly List<Game> _games;
 
-        public ChessService(string connectionString)
+        public ChessService()
         {
-            _connectionString = connectionString;
+            // Initialize with some data or fetch from a database
+            _games = new List<Game>
+            {
+                new Game { Id = 1, Name = "Game 1", Status = "In Progress", Moves = new List<string>() },
+                new Game { Id = 2, Name = "Game 2", Status = "Completed", Moves = new List<string>() }
+            };
         }
 
-        // Method to get all games
+        // Get all games - returns a collection of games
         public IEnumerable<Game> GetAllGames()
         {
-            List<Game> games = new List<Game>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                var command = new SqlCommand("SELECT GameId FROM Games", connection);
-
-                var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    var gameId = reader.GetInt32(0);
-                    var moves = GetMovesForGame(gameId);  // Ensure this method is public
-                    games.Add(new Game { GameId = gameId, Moves = moves });
-                }
-            }
-
-            return games;
+            return _games;
         }
 
-        // Get all moves for a specific game
-        public List<string> GetMovesForGame(int gameId)  // Changed to public
+        // Get a specific game by ID - returns nullable Game
+        public Game? GetGameById(int id)
         {
-            List<string> moves = new List<string>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                var command = new SqlCommand("SELECT Move FROM Moves WHERE GameId = @GameId", connection);
-                command.Parameters.AddWithValue("@GameId", gameId);
-
-                var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    moves.Add(reader.GetString(0));
-                }
-            }
-
-            return moves;
+            // If no game found, return null
+            return _games.FirstOrDefault(g => g.Id == id);
         }
 
-        // Method to create a new game and store moves in the database
-        public void CreateGame(Game game)
+        // Add a new game to the list
+        public void AddGame(Game game)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            if (game != null)
             {
-                connection.Open();
-                var command = new SqlCommand("INSERT INTO Games (CreatedAt) OUTPUT INSERTED.GameId VALUES (GETDATE())", connection);
-                game.GameId = (int)command.ExecuteScalar();  // Get the generated GameId
-
-                // Save the moves
-                foreach (var move in game.Moves)
-                {
-                    SaveMove(game.GameId, move, connection);
-                }
+                _games.Add(game); // Add game logic, such as saving to a database or list
             }
         }
 
-        // Method to save each move for a game
-        private void SaveMove(int gameId, string move, SqlConnection connection)
+        // Add a move to a specific game - checks if game exists
+        public void AddMove(int gameId, string move)
         {
-            var command = new SqlCommand("INSERT INTO Moves (GameId, Move) VALUES (@GameId, @Move)", connection);
-            command.Parameters.AddWithValue("@GameId", gameId);
-            command.Parameters.AddWithValue("@Move", move);
-            command.ExecuteNonQuery();
+            var game = GetGameById(gameId);
+
+            if (game != null)
+            {
+                game.Moves.Add(move); // Add the move to the game's move list
+                game.Status = "In Progress"; // Update game status if needed
+            }
+            else
+            {
+                // Handle the case where the game doesn't exist (optional)
+                throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+            }
         }
     }
 }

@@ -1,61 +1,71 @@
+using Microsoft.AspNetCore.Mvc;
 using ChessBackend.Models;
 using ChessBackend.Services;
-using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace ChessBackend.Controllers
 {
+    // Ensure the correct route prefix is set
+    [Route("api/chess/[controller]")]
     [ApiController]
-    [Route("api/[controller]")]
     public class GamesController : ControllerBase
     {
-        private readonly ChessService _chessService;
+        private readonly IChessService _chessService;
 
-        public GamesController(ChessService chessService)
+        public GamesController(IChessService chessService)
         {
             _chessService = chessService;
         }
 
-        [HttpGet("api/chess/games")]
-        public IActionResult GetAllGames()
+        // GET api/chess/games
+        [HttpGet("games")]
+        public IActionResult GetGames()
         {
-            try
+            var games = _chessService.GetAllGames();
+            if (games == null || !games.Any())
             {
-                var games = _chessService.GetAllGames();
-                return Ok(games);
+                return NotFound(); // Return 404 if no games are found
             }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error: {ex.Message}");
-            }
+            return Ok(games); // Return 200 OK with the games list
         }
 
-        [HttpPost("CreateGame")]
-        public IActionResult CreateGame([FromBody] Game game)
+        // GET api/chess/games/{id}
+        [HttpGet("games/{id}")]
+        public IActionResult GetGame(int id)
         {
-            try
+            var game = _chessService.GetGameById(id);
+            if (game == null)
             {
-                _chessService.CreateGame(game);
-                return Ok(game);
+                return NotFound(); // Return 404 if the game with the specified ID is not found
             }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error: {ex.Message}");
-            }
+            return Ok(game); // Return 200 OK with the game details
         }
 
-        // Endpoint to replay the moves of a specific game
-        [HttpGet("ReplayGame/{gameId}")]
-        public IActionResult ReplayGame(int gameId)
+        // POST api/chess/games
+        [HttpPost("games")]
+        public IActionResult AddGame([FromBody] Game game)
         {
-            try
+            if (game == null)
             {
-                var moves = _chessService.GetMovesForGame(gameId);
-                return Ok(moves);
+                return BadRequest(); // Return 400 if the provided game data is invalid
             }
-            catch (Exception ex)
+
+            _chessService.AddGame(game);
+            return CreatedAtAction(nameof(GetGame), new { id = game.Id }, game); // Return 201 Created with the location of the newly created game
+        }
+
+        // POST api/chess/games/{gameId}/moves
+        [HttpPost("games/{gameId}/moves")]
+        public IActionResult AddMove(int gameId, [FromBody] string move)
+        {
+            var game = _chessService.GetGameById(gameId);
+            if (game == null)
             {
-                return BadRequest($"Error: {ex.Message}");
+                return NotFound(); // Return 404 if the game with the specified ID is not found
             }
+
+            _chessService.AddMove(gameId, move);
+            return Ok(game); // Return 200 OK with the updated game details
         }
     }
 }
