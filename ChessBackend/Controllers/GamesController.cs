@@ -5,8 +5,7 @@ using System.Linq;
 
 namespace ChessBackend.Controllers
 {
-    // Ensure the correct route prefix is set
-    [Route("api/chess/[controller]")]
+    [Route("api/chess/games")]  // Fix: Set the route directly to api/chess/games
     [ApiController]
     public class GamesController : ControllerBase
     {
@@ -18,7 +17,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET api/chess/games
-        [HttpGet("games")]
+        [HttpGet]
         public IActionResult GetGames()
         {
             var games = _chessService.GetAllGames();
@@ -30,7 +29,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET api/chess/games/{id}
-        [HttpGet("games/{id}")]
+        [HttpGet("{id}")]
         public IActionResult GetGame(int id)
         {
             var game = _chessService.GetGameById(id);
@@ -42,7 +41,7 @@ namespace ChessBackend.Controllers
         }
 
         // POST api/chess/games
-        [HttpPost("games")]
+        [HttpPost]
         public IActionResult AddGame([FromBody] Game game)
         {
             if (game == null)
@@ -55,7 +54,7 @@ namespace ChessBackend.Controllers
         }
 
         // POST api/chess/games/{gameId}/moves
-        [HttpPost("games/{gameId}/moves")]
+        [HttpPost("{gameId}/moves")]
         public IActionResult AddMove(int gameId, [FromBody] string move)
         {
             var game = _chessService.GetGameById(gameId);
