@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\dngor\\OneDrive\\Desktop\\Stonic\\ChessBackend\\ChessBackend.csproj": {}
+    "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\dngor\\OneDrive\\Desktop\\Stonic\\ChessBackend\\ChessBackend.csproj": {
+    "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\dngor\\OneDrive\\Desktop\\Stonic\\ChessBackend\\ChessBackend.csproj",
+        "projectUniqueName": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj",
         "projectName": "ChessBackend",
-        "projectPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\Stonic\\ChessBackend\\ChessBackend.csproj",
-        "packagesPath": "C:\\Users\\dngor\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\Stonic\\ChessBackend\\obj\\",
+        "projectPath": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj",
+        "packagesPath": "C:\\Users\\Paolo\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\dngor\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Paolo\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
