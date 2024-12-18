@@ -1,23 +1,23 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';  // Import CommonModule
-import { Chess } from 'chess.js';
-import { ChessService } from '../chess.service'; // Import ChessService
-
+import { CommonModule } from '@angular/common';
+import { ChessService } from '../services/chess.service';  // Import ChessService
+import { HttpClientModule } from '@angular/common/http';   // Import HttpClientModule
+import { Chess } from 'chess.js'; // Import Chess.js for game logic
 
 @Component({
   selector: 'app-chessboard',
-  standalone: true,  
+  standalone: true,
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
-  imports: [CommonModule],  // Add CommonModule to imports
+  imports: [CommonModule, HttpClientModule],  // Add HttpClientModule here
 })
-export class ChessboardComponent {
+export class ChessboardComponent implements OnInit {
   boardState: any[] = [];
   game: Chess;
   selectedSquare: string | null = null;  // Allow null value
   invalidMoveMessage: string | null = null;
 
-  constructor() {
+  constructor(private chessService: ChessService) {
     this.game = new Chess();
   }
 
@@ -88,5 +88,25 @@ export class ChessboardComponent {
     const file = String.fromCharCode(97 + colIndex); // 'a' to 'h'
     const rank = 8 - rowIndex; // 8 to 1
     return file + rank;
+  }
+
+  // Example method to call backend for creating a new game
+  createGame() {
+    const gameData = { moves: ['e2e4', 'e7e5'] };  // Sample moves
+    this.chessService.createGame(gameData).subscribe(response => {
+      console.log('Game created:', response);
+    });
+  }
+
+  // Example method to fetch and replay moves for a specific game
+  replayGame(gameId: number) {
+    this.chessService.getGameMoves(gameId).subscribe(moves => {
+      console.log('Replaying game moves:', moves);
+      this.game.reset(); // Reset game state
+      moves.forEach(move => {
+        this.game.move(move); // Apply each move
+      });
+      this.updateBoard();
+    });
   }
 }

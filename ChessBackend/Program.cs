@@ -22,13 +22,25 @@ namespace ChessBackend
             }
 
             builder.Services.AddSingleton<ChessService>(serviceProvider => new ChessService("YourConnectionStringHere"));
-
-
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Enable CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+
             var app = builder.Build();
+
+            // Use CORS
+            app.UseCors("AllowAll");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -37,13 +49,12 @@ namespace ChessBackend
                 app.UseSwaggerUI();
             }
 
-           if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseAuthorization();
-
             app.MapControllers();
 
             app.Run();

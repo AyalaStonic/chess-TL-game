@@ -42,5 +42,20 @@ namespace ChessBackend.Controllers
                 return BadRequest($"Error: {ex.Message}");
             }
         }
+
+        // Endpoint to replay the moves of a specific game
+        [HttpGet("ReplayGame/{gameId}")]
+        public IActionResult ReplayGame(int gameId)
+        {
+            try
+            {
+                var moves = _chessService.GetMovesForGame(gameId);
+                return Ok(moves);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
     }
 }
