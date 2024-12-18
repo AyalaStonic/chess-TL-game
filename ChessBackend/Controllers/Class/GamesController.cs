@@ -1,53 +1,46 @@
-// GamesController.cs
-using Microsoft.AspNetCore.Mvc;
+using ChessBackend.Models;
 using ChessBackend.Services;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ChessBackend.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class GamesController : ControllerBase
     {
         private readonly ChessService _chessService;
 
-        // Constructor with dependency injection
         public GamesController(ChessService chessService)
         {
             _chessService = chessService;
         }
 
-        // POST: api/games/save-move
-        [HttpPost("save-move")]
-        public async Task<IActionResult> SaveMove([FromBody] GameMoveRequest request)
+        [HttpGet("GetAllGames")]
+        public IActionResult GetAllGames()
         {
-            if (request == null || string.IsNullOrEmpty(request.GameId) || string.IsNullOrEmpty(request.Move))
+            try
             {
-                return BadRequest("Invalid request");
+                var games = _chessService.GetAllGames();
+                return Ok(games);
             }
-
-            await _chessService.SaveMoveAsync(request.GameId, request.Move);
-            return Ok("Move saved successfully");
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
         }
 
-        // GET: api/games/get-moves/{gameId}
-        [HttpGet("get-moves/{gameId}")]
-        public async Task<IActionResult> GetGameMoves(string gameId)
+        [HttpPost("CreateGame")]
+        public IActionResult CreateGame([FromBody] Game game)
         {
-            if (string.IsNullOrEmpty(gameId))
+            try
             {
-                return BadRequest("Game ID is required");
+                _chessService.CreateGame(game);
+                return Ok(game);
             }
-
-            var moves = await _chessService.GetGameMovesAsync(gameId);
-            return Ok(moves);
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
         }
-    }
-
-    // Helper class to hold request data for saving a move
-    public class GameMoveRequest
-    {
-        public string GameId { get; set; }
-        public string Move { get; set; }
     }
 }
