@@ -1,4 +1,4 @@
-@ChessBackend_HostAddress = http://localhost:5265
+@ChessBackend_HostAddress = http://localhost:5000
 
 GET {{ChessBackend_HostAddress}}/weatherforecast/
 Accept: application/json

@@ -1,61 +1,57 @@
-// ChessService.cs
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Threading.Tasks;
+using ChessBackend.Data;
+using ChessBackend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChessBackend.Services
 {
-    public class ChessService
+    public class ChessService : IChessService
     {
-        private readonly string _connectionString;
+        private readonly AppDbContext _context;
 
-        // Constructor that accepts connection string from app settings
-        public ChessService(string connectionString)
+        public ChessService(AppDbContext context)
         {
-            _connectionString = connectionString;
+            _context = context;
         }
 
-        // Save a move to the database
-        public async Task SaveMoveAsync(string gameId, string move)
+        // Implement the GetGameByIdAsync method with non-nullable return type
+        public async Task<Game> GetGameByIdAsync(int id)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
+            if (game == null)
+                throw new KeyNotFoundException("Game not found");
+
+            return game;
+        }
+
+        // Implement CreateGameAsync (was missing)
+        public async Task CreateGameAsync(Game game)
+        {
+            _context.Games.Add(game);
+            await _context.SaveChangesAsync();
+        }
+
+        // Implement UpdateGameAsync
+        public async Task UpdateGameAsync(Game game)
+        {
+            _context.Games.Update(game);
+            await _context.SaveChangesAsync();
+        }
+
+        // Implement DeleteGameAsync
+        public async Task DeleteGameAsync(int id)
+        {
+            var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
+            if (game != null)
             {
-                await connection.OpenAsync();
-
-                var query = "INSERT INTO GameMoves (GameId, Move) VALUES (@gameId, @move)";
-                var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@gameId", gameId);
-                command.Parameters.AddWithValue("@move", move);
-
-                await command.ExecuteNonQueryAsync();
+                _context.Games.Remove(game);
+                await _context.SaveChangesAsync();
             }
         }
 
-        // Get all moves for a specific game
-        public async Task<List<string>> GetGameMovesAsync(string gameId)
+        // Implement GetAllGamesAsync with matching return type
+        public async Task<IEnumerable<Game>> GetAllGamesAsync()
         {
-            var moves = new List<string>();
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                await connection.OpenAsync();
-
-                var query = "SELECT Move FROM GameMoves WHERE GameId = @gameId";
-                var command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@gameId", gameId);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        moves.Add(reader.GetString(0));
-                    }
-                }
-            }
-
-            return moves;
+            return await _context.Games.ToListAsync();
         }
     }
 }
