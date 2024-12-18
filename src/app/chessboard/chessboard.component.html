@@ -8,3 +8,12 @@
     </div>
   </div>
 </div>
+
+<!-- Controls for Reset, Save, and Load Game -->
+<div class="controls">
+  <button (click)="resetGame()">Reset Game</button>
+  <button (click)="loadGames()">Load Game</button>
+  <button (click)="saveGame()">Save Game</button>
+
+  <div *ngIf="invalidMoveMessage" style="color: red; margin-top: 10px;">{{ invalidMoveMessage }}</div>
+</div>

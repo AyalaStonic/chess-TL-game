@@ -1,112 +1,79 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ChessService } from '../services/chess.service';  // Import ChessService
-import { HttpClientModule } from '@angular/common/http';   // Import HttpClientModule
-import { Chess } from 'chess.js'; // Import Chess.js for game logic
+import { ChessService } from '../services/chess.service';
+import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';  // Import CommonModule
 
 @Component({
   selector: 'app-chessboard',
   standalone: true,
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
-  imports: [CommonModule, HttpClientModule],  // Add HttpClientModule here
+  providers: [ChessService, HttpClient],
+  imports: [CommonModule]  // Add CommonModule here to resolve the *ngFor, *ngIf, ngClass, and uppercase pipe
 })
-export class ChessboardComponent implements OnInit {
-  boardState: any[] = [];
-  game: Chess;
-  selectedSquare: string | null = null;  // Allow null value
+export class ChessboardComponent {
+  boardState: string[][] = [];
+  selectedSquare: string | null = null;
   invalidMoveMessage: string | null = null;
+  currentGame: any;
+  games: any[] = [];
 
-  constructor(private chessService: ChessService) {
-    this.game = new Chess();
-  }
+  constructor(private chessService: ChessService, private http: HttpClient) {}
 
-  ngOnInit(): void {
-    this.updateBoard();
-  }
-
-  updateBoard() {
-    const board = this.game.board();
-    this.boardState = board.map((row: any) =>
-      row.map((piece: any) => (piece ? piece.type : null))
-    );
-  }
-
-  makeMove(from: string, to: string) {
-    const move = this.game.move({ from, to });
-    if (move === null) {
-      this.invalidMoveMessage = 'Invalid move! Try again.';
-      return;
-    }
-    this.invalidMoveMessage = null;
-    this.updateBoard();
-  }
-
-  resetGame() {
-    this.game.reset();
-    this.updateBoard();
-    this.selectedSquare = null;
-    this.invalidMoveMessage = null;
+  ngOnInit() {
+    this.chessService.getAllGames().subscribe((games: any) => {
+      this.games = games;
+    });
   }
 
   getSquareClass(rowIndex: number, colIndex: number): string {
-    return (rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark';
+    return (rowIndex + colIndex) % 2 === 0 ? 'white' : 'black';
+  }
+
+  getSquareFromIndices(rowIndex: number, colIndex: number): string {
+    return `${String.fromCharCode(65 + colIndex)}${8 - rowIndex}`;
   }
 
   onSquareClick(rowIndex: number, colIndex: number) {
     const square = this.getSquareFromIndices(rowIndex, colIndex);
-
-    if (this.selectedSquare === square) {
-      this.selectedSquare = null;
-      this.invalidMoveMessage = null;
-      return;
-    }
-
     if (this.selectedSquare) {
-      const move = this.game.move({
-        from: this.selectedSquare,
-        to: square,
-      });
-
-      if (move === null) {
-        this.invalidMoveMessage = 'Invalid move! Try again.';
-        return;
-      }
-
-      this.invalidMoveMessage = null;
-      this.updateBoard();
-      this.selectedSquare = null;
+      this.makeMove(this.selectedSquare, square);
     } else {
-      const piece = this.game.get(square as any);
-      if (piece) {
-        this.selectedSquare = square;
-      }
+      this.selectedSquare = square;
     }
   }
 
-  getSquareFromIndices(rowIndex: number, colIndex: number): string {
-    const file = String.fromCharCode(97 + colIndex); // 'a' to 'h'
-    const rank = 8 - rowIndex; // 8 to 1
-    return file + rank;
+  makeMove(from: string, to: string) {
+    // Logic for making a move
+    this.chessService.movePiece(from, to).subscribe(
+      (response: any) => {
+        this.selectedSquare = null;
+        this.invalidMoveMessage = null;
+        this.chessService.updateGame(this.currentGame).subscribe();
+      },
+      (error) => {
+        this.invalidMoveMessage = "Invalid move!";
+      }
+    );
   }
 
-  // Example method to call backend for creating a new game
-  createGame() {
-    const gameData = { moves: ['e2e4', 'e7e5'] };  // Sample moves
-    this.chessService.createGame(gameData).subscribe(response => {
-      console.log('Game created:', response);
+  
+  resetGame() {
+    this.chessService.resetGame().subscribe(() => {
+      this.boardState = [];
+      this.selectedSquare = null;
+      this.invalidMoveMessage = null;
     });
   }
 
-  // Example method to fetch and replay moves for a specific game
-  replayGame(gameId: number) {
-    this.chessService.getGameMoves(gameId).subscribe(moves => {
-      console.log('Replaying game moves:', moves);
-      this.game.reset(); // Reset game state
-      moves.forEach(move => {
-        this.game.move(move); // Apply each move
-      });
-      this.updateBoard();
+  saveGame() {
+    this.chessService.saveGame(this.currentGame).subscribe();
+  }
+
+  // Define the loadGames method
+  loadGames() {
+    this.chessService.getAllGames().subscribe((games: any) => {
+      this.games = games;
     });
   }
 }

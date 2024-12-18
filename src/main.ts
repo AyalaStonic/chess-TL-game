@@ -1,5 +1,9 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { AppComponent } from './app/app.component';  // Import AppComponent
+import { provideHttpClient, withFetch } from '@angular/common/http';
+import { AppComponent } from './app/app.component';
 
-bootstrapApplication(AppComponent)  // Bootstrap the root AppComponent
-  .catch(err => console.error('Bootstrap error:', err));  // Error handling
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient(withFetch())  // Enables the fetch API for better performance
+  ]
+});

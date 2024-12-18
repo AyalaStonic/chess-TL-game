@@ -15,7 +15,7 @@ namespace ChessBackend.Controllers
             _chessService = chessService;
         }
 
-        [HttpGet("GetAllGames")]
+        [HttpGet("api/chess/games")]
         public IActionResult GetAllGames()
         {
             try

@@ -1,34 +1,30 @@
-// src/app/services/chess.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ChessService {
-  private apiUrl = 'http://localhost:5000/api/games';
+  private apiUrl = 'http://localhost:5000/api/chess'; // Replace with your actual API URL
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  createGame(game: { moves: string[] }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/CreateGame`, game)
-      .pipe(
-        catchError(error => {
-          console.error('Error creating game:', error);
-          throw error;
-        })
-      );
+  getAllGames(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/games`);
   }
 
-  getGameMoves(gameId: number): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/ReplayGame/${gameId}`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching game moves:', error);
-          throw error;
-        })
-      );
+  updateGame(game: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/games/${game.id}`, game);
+  }
+
+  movePiece(from: string, to: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/move`, { from, to });
+  }
+
+  resetGame(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reset`, {});
+  }
+
+  saveGame(game: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/games`, game);
   }
 }
