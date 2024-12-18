@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChessBackend.Controllers
 {
-    [Route("api/chess/games")]  // Fix: Set the route directly to api/chess/games
+    [Route("api/chess/games")]  // Route set correctly
     [ApiController]
     public class GamesController : ControllerBase
     {
@@ -47,6 +47,12 @@ namespace ChessBackend.Controllers
             if (game == null)
             {
                 return BadRequest(); // Return 400 if the provided game data is invalid
+            }
+
+            // Optional: Validate model before adding it
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState); // Return validation errors if any
             }
 
             _chessService.AddGame(game);
