@@ -21,6 +21,12 @@ namespace ChessBackend.Services
         Game StartNewGame();
         
         // Resets the current game
-        Game ResetGame();  // Add this line to the interface
+        Game ResetGame(int gameId);  // Reset a specific game
+        
+        // Marks a game as completed (updates status and sets EndedAt)
+        void CompleteGame(int gameId);
+
+        // Save the game state (new method to be implemented)
+        void SaveGame(Game game);
     }
 }

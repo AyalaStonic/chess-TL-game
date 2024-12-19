@@ -21,6 +21,7 @@ export class ChessboardComponent implements OnInit {
   constructor(private chessService: ChessService, private http: HttpClient) {}
 
   ngOnInit() {
+    // Initialize the chessboard with the starting pieces
     this.boardState = [
       ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],  // Black pieces
       ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],  // Black pawns
@@ -37,28 +38,40 @@ export class ChessboardComponent implements OnInit {
       this.games = games;
     });
   }
+
+  // Get the class for the square (light or dark)
   getSquareClass(rowIndex: number, colIndex: number): string {
     return (rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark';
   }
 
+  // Convert row and column indices to chess notation (e.g., "A1", "H8")
   getSquareFromIndices(rowIndex: number, colIndex: number): string {
     return `${String.fromCharCode(65 + colIndex)}${8 - rowIndex}`;
   }
 
+  // Handle square click event to select or move pieces
   onSquareClick(rowIndex: number, colIndex: number) {
     const square = this.getSquareFromIndices(rowIndex, colIndex);
+  
     if (this.selectedSquare) {
+      // Make the move when the second square is clicked
       this.makeMove(this.selectedSquare, square);
+      this.selectedSquare = null; // Deselect after the move
     } else {
+      // Select the square when clicked
       this.selectedSquare = square;
     }
   }
 
+  // Make a move by sending the move request to the backend
   makeMove(from: string, to: string) {
+    // Call backend service to move the piece
     this.chessService.movePiece(from, to).subscribe(
       (response: any) => {
         this.selectedSquare = null;
         this.invalidMoveMessage = null;
+
+        // Update the game state after the move
         this.chessService.updateGame(this.currentGame).subscribe();
       },
       (error) => {
@@ -67,6 +80,7 @@ export class ChessboardComponent implements OnInit {
     );
   }
 
+  // Start a new game
   startNewGame() {
     this.chessService.startNewGame().subscribe((newGame: any) => {
       this.boardState = []; // Reset the board state
@@ -76,6 +90,7 @@ export class ChessboardComponent implements OnInit {
     });
   }
 
+  // Reset the game state
   resetGame() {
     this.chessService.resetGame().subscribe(
       (response) => {
@@ -91,10 +106,19 @@ export class ChessboardComponent implements OnInit {
     );
   }
 
+  // Save the current game state
   saveGame() {
-    this.chessService.saveGame(this.currentGame).subscribe();
+    this.chessService.saveGame(this.currentGame).subscribe(
+      (response) => {
+        console.log('Game saved successfully:', response);
+      },
+      (error) => {
+        console.error('Error saving game:', error);
+      }
+    );
   }
 
+  // Load all previously saved games
   loadGames() {
     this.chessService.getAllGames().subscribe((games: any) => {
       this.games = games;

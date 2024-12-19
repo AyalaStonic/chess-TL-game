@@ -86,17 +86,39 @@ namespace ChessBackend.Controllers
             return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame); // Return 201 Created with the new game
         }
 
-        // POST api/chess/reset - Reset the game
-        [HttpPost("reset")]
-        public IActionResult ResetGame()
+        // POST api/chess/reset/{gameId} - Reset the game
+        [HttpPost("reset/{gameId}")]
+        public IActionResult ResetGame(int gameId)
         {
-            var resetGame = _chessService.ResetGame();
-            if (resetGame == null)
+            try
             {
-                return BadRequest("Failed to reset the game."); // Handle any failure
+                var resetGame = _chessService.ResetGame(gameId); // Pass gameId to ResetGame
+                return Ok(resetGame); // Return 200 OK with the reset game state
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = $"Game with ID {gameId} not found." }); // Return 404 if the game doesn't exist
+            }
+        }
+
+        // POST api/chess/save - Save the game state
+        [HttpPost("save")]
+        public IActionResult SaveGame([FromBody] Game game)
+        {
+            if (game == null)
+            {
+                return BadRequest("Invalid game data."); // Return 400 if the game data is not valid
             }
 
-            return Ok(resetGame); // Return 200 OK with the reset game state
+            try
+            {
+                _chessService.SaveGame(game); // Call SaveGame method in the service
+                return Ok(new { message = "Game saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Error saving game", error = ex.Message }); // Return 400 with error message
+            }
         }
     }
 }

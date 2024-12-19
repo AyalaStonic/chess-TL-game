@@ -1,6 +1,7 @@
 using ChessBackend.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace ChessBackend.Services
 {
@@ -10,87 +11,118 @@ namespace ChessBackend.Services
 
         public ChessService()
         {
-            // Initialize with some data or fetch from a database
+            // Initializing the games list with some example games. 
+            // You can replace this with actual database fetching logic when ready.
             _games = new List<Game>
             {
-                new Game { Id = 1, Name = "Game 1", Status = "In Progress", Moves = new List<string>() },
-                new Game { Id = 2, Name = "Game 2", Status = "Completed", Moves = new List<string>() }
+                new Game { Id = 1, Name = "Game 1", Status = "In Progress", Moves = new List<string>(), CreatedAt = DateTime.UtcNow },
+                new Game { Id = 2, Name = "Game 2", Status = "Completed", Moves = new List<string>(), CreatedAt = DateTime.UtcNow }
             };
         }
 
-        // Get all games - returns a collection of games
+        // Get all games
         public IEnumerable<Game> GetAllGames()
         {
             return _games;
         }
 
-        // Get a specific game by ID - returns nullable Game
+        // Get a specific game by its ID
         public Game? GetGameById(int id)
         {
-            // If no game found, return null
             return _games.FirstOrDefault(g => g.Id == id);
         }
 
-        // Add a new game to the list
+        // Add a new game
         public void AddGame(Game game)
         {
             if (game != null)
             {
-                _games.Add(game); // Add game logic, such as saving to a database or list
+                _games.Add(game); // Add the new game to the list (or a database in a real-world scenario)
             }
         }
 
-        // Add a move to a specific game - checks if game exists
+        // Add a move to a specific game by game ID
         public void AddMove(int gameId, string move)
         {
             var game = GetGameById(gameId);
-
             if (game != null)
             {
                 game.Moves.Add(move); // Add the move to the game's move list
-                game.Status = "In Progress"; // Update game status if needed
+                game.Status = "In Progress"; // Update the game status
             }
             else
             {
-                // Handle the case where the game doesn't exist (optional)
-                throw new KeyNotFoundException($"Game with ID {gameId} not found.");
+                throw new KeyNotFoundException($"Game with ID {gameId} not found."); // If the game doesn't exist
             }
         }
 
-        // Start a new game - initialize a new game and add it to the list
+        // Start a new game
         public Game StartNewGame()
         {
-            // Initialize the new game
             var newGame = new Game
             {
-                Id = _games.Count + 1, // Incremental ID generation (or you can implement a better strategy)
+                Id = _games.Count + 1, // Auto-increment ID
                 Name = $"Game {_games.Count + 1}",
-                Status = "In Progress",
-                Moves = new List<string>() // Empty list of moves at the start
+                Status = "In Progress", // New game starts as "In Progress"
+                Moves = new List<string>(), // Empty list of moves
+                CreatedAt = DateTime.UtcNow // Set the creation time
             };
 
-            // Add to the game list
-            _games.Add(newGame);
-
+            _games.Add(newGame); // Add the new game to the list
             return newGame;
         }
 
-        // Implement the ResetGame method to reset the last added game (or you can adjust it as needed)
-        public Game ResetGame()
+        // Reset a specific game by game ID
+        public Game ResetGame(int gameId)
         {
-            // Optionally, you can reset the last added game or implement logic to reset a specific game
-            var game = _games.LastOrDefault(); // Reset the most recent game, or you can choose a specific one
+            var game = GetGameById(gameId);
             if (game != null)
             {
-                game.Status = "In Progress"; // Reset the status
-                game.Moves.Clear(); // Clear the moves
+                game.Status = "In Progress"; // Reset game status to "In Progress"
+                game.Moves.Clear(); // Clear the move history
             }
             else
             {
-                throw new InvalidOperationException("No game found to reset.");
+                throw new KeyNotFoundException($"Game with ID {gameId} not found."); // If the game doesn't exist
             }
 
-            return game;
+            return game; // Return the reset game
+        }
+
+        // Mark a game as completed
+        public void CompleteGame(int gameId)
+        {
+            var game = GetGameById(gameId);
+            if (game != null)
+            {
+                game.Status = "Completed"; // Update status to "Completed"
+                game.EndedAt = DateTime.UtcNow;  // Set the end time when the game is completed
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Game with ID {gameId} not found."); // If the game doesn't exist
+            }
+        }
+
+        // Implement the SaveGame method
+        public void SaveGame(Game game)
+        {
+            // Check if the game exists by its ID
+            var existingGame = _games.FirstOrDefault(g => g.Id == game.Id);
+            if (existingGame != null)
+            {
+                // If the game exists, update its properties
+                existingGame.Name = game.Name;
+                existingGame.Status = game.Status;
+                existingGame.Moves = game.Moves;
+                existingGame.CreatedAt = game.CreatedAt;
+                existingGame.EndedAt = game.EndedAt; // Update the end time if provided
+            }
+            else
+            {
+                // If the game doesn't exist, add it as a new game
+                _games.Add(game);
+            }
         }
     }
 }
