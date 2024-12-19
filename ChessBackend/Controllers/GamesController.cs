@@ -77,7 +77,6 @@ namespace ChessBackend.Controllers
         [HttpPost("start")]
         public IActionResult StartNewGame()
         {
-            // Initialize a new game using the service
             var newGame = _chessService.StartNewGame();
             if (newGame == null)
             {
