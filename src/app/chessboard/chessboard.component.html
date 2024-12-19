@@ -4,6 +4,8 @@
          class="square"
          [ngClass]="[getSquareClass(rowIndex, colIndex), selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : '']"
          (click)="onSquareClick(rowIndex, colIndex)">
+      
+      <!-- Display the piece if the cell is not empty -->
       <span *ngIf="cell" class="piece">{{ cell | uppercase }}</span>
     </div>
   </div>
@@ -12,7 +14,7 @@
 <!-- Controls for Reset, Save, Load, and Start New Game -->
 <div class="controls">
   <button (click)="resetGame()">Reset Game</button>
-  <button (click)="startNewGame()">Start New Game</button> <!-- New button for starting a new game -->
+  <button (click)="startNewGame()">Start New Game</button>
   <button (click)="loadGames()">Load Game</button>
   <button (click)="saveGame()">Save Game</button>
 

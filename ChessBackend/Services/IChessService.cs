@@ -19,5 +19,8 @@ namespace ChessBackend.Services
 
         // Start a new game
         Game StartNewGame();
+        
+        // Resets the current game
+        Game ResetGame();  // Add this line to the interface
     }
 }

@@ -45,10 +45,13 @@
   font-size: 3em;             /* Increased font size for visibility */
   color: black;               /* Default color for pieces */
   transition: transform 0.3s ease-in-out; /* Smooth animation for movement */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-
-.square .piece img {
+/* Image pieces inside squares */
+.square img {
   width: 70%;                 /* Adjust image size */
   height: 70%;
   margin: auto;               /* Center images */

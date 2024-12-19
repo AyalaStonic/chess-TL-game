@@ -39,3 +39,6 @@ URL: http://localhost:5000/api/chess/games/{gameId}/moves
 Method: POST
 
 "e2 to e4"
+
+
+start chrome --disable-web-security --user-data-dir="C:\chrome_dev"

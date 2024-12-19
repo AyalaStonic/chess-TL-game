@@ -74,5 +74,23 @@ namespace ChessBackend.Services
 
             return newGame;
         }
+
+        // Implement the ResetGame method to reset the last added game (or you can adjust it as needed)
+        public Game ResetGame()
+        {
+            // Optionally, you can reset the last added game or implement logic to reset a specific game
+            var game = _games.LastOrDefault(); // Reset the most recent game, or you can choose a specific one
+            if (game != null)
+            {
+                game.Status = "In Progress"; // Reset the status
+                game.Moves.Clear(); // Clear the moves
+            }
+            else
+            {
+                throw new InvalidOperationException("No game found to reset.");
+            }
+
+            return game;
+        }
     }
 }

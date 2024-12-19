@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ChessBackend.Controllers
 {
-    [Route("api/chess/games")]  // Route set correctly
+    [Route("api/chess")]  // Route for all chess-related endpoints
     [ApiController]
     public class GamesController : ControllerBase
     {
@@ -17,7 +17,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET api/chess/games
-        [HttpGet]
+        [HttpGet("games")]
         public IActionResult GetGames()
         {
             var games = _chessService.GetAllGames();
@@ -29,7 +29,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET api/chess/games/{id}
-        [HttpGet("{id}")]
+        [HttpGet("games/{id}")]
         public IActionResult GetGame(int id)
         {
             var game = _chessService.GetGameById(id);
@@ -41,7 +41,7 @@ namespace ChessBackend.Controllers
         }
 
         // POST api/chess/games
-        [HttpPost]
+        [HttpPost("games")]
         public IActionResult AddGame([FromBody] Game game)
         {
             if (game == null)
@@ -60,7 +60,7 @@ namespace ChessBackend.Controllers
         }
 
         // POST api/chess/games/{gameId}/moves
-        [HttpPost("{gameId}/moves")]
+        [HttpPost("games/{gameId}/moves")]
         public IActionResult AddMove(int gameId, [FromBody] string move)
         {
             var game = _chessService.GetGameById(gameId);
@@ -73,7 +73,7 @@ namespace ChessBackend.Controllers
             return Ok(game); // Return 200 OK with the updated game details
         }
 
-        // POST api/chess/games/start
+        // POST api/chess/start
         [HttpPost("start")]
         public IActionResult StartNewGame()
         {
@@ -84,6 +84,19 @@ namespace ChessBackend.Controllers
             }
 
             return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame); // Return 201 Created with the new game
+        }
+
+        // POST api/chess/reset - Reset the game
+        [HttpPost("reset")]
+        public IActionResult ResetGame()
+        {
+            var resetGame = _chessService.ResetGame();
+            if (resetGame == null)
+            {
+                return BadRequest("Failed to reset the game."); // Handle any failure
+            }
+
+            return Ok(resetGame); // Return 200 OK with the reset game state
         }
     }
 }
