@@ -28,7 +28,7 @@ Method: POST
 
 3. POST Request (Start a New Game)
 
-URL: http://localhost:5000/api/chess/games/start
+URL: http://localhost:5000/api/chess/start
 Method: POST
 
 {}

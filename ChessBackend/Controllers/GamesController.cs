@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ChessBackend.Models;
 using ChessBackend.Services;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ChessBackend.Controllers
 {
@@ -40,6 +41,28 @@ namespace ChessBackend.Controllers
             return Ok(game); // Return 200 OK with the game details
         }
 
+        // POST api/chess/move
+        [HttpPost("move")]
+        public IActionResult MakeMove([FromQuery] int gameId, [FromBody] string move)
+        {
+            var game = _chessService.GetGameById(gameId);
+            if (game == null)
+            {
+                return NotFound(new { message = "Game not found." });
+            }
+
+            try
+            {
+                // Validate the move and apply it
+                _chessService.AddMove(gameId, move); // Add the move to the game
+                return Ok(new { message = "Move added successfully", game }); // Return the updated game
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Invalid move.", error = ex.Message });
+            }
+        }
+
         // POST api/chess/games
         [HttpPost("games")]
         public IActionResult AddGame([FromBody] Game game)
@@ -57,20 +80,6 @@ namespace ChessBackend.Controllers
 
             _chessService.AddGame(game);
             return CreatedAtAction(nameof(GetGame), new { id = game.Id }, game); // Return 201 Created with the location of the newly created game
-        }
-
-        // POST api/chess/games/{gameId}/moves
-        [HttpPost("games/{gameId}/moves")]
-        public IActionResult AddMove(int gameId, [FromBody] string move)
-        {
-            var game = _chessService.GetGameById(gameId);
-            if (game == null)
-            {
-                return NotFound(); // Return 404 if the game with the specified ID is not found
-            }
-
-            _chessService.AddMove(gameId, move);
-            return Ok(game); // Return 200 OK with the updated game details
         }
 
         // POST api/chess/start
@@ -92,14 +101,15 @@ namespace ChessBackend.Controllers
         {
             try
             {
-                var resetGame = _chessService.ResetGame(gameId); // Pass gameId to ResetGame
-                return Ok(resetGame); // Return 200 OK with the reset game state
+                var resetGame = _chessService.ResetGame(gameId);
+                return Ok(resetGame); // Return the reset game object
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { message = $"Game with ID {gameId} not found." }); // Return 404 if the game doesn't exist
+                return NotFound(new { message = $"Game with ID {gameId} not found." });
             }
         }
+        
 
         // POST api/chess/save - Save the game state
         [HttpPost("save")]

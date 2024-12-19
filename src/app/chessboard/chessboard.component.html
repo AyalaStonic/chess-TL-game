@@ -2,11 +2,14 @@
   <div *ngFor="let row of boardState; let rowIndex = index">
     <div *ngFor="let cell of row; let colIndex = index"
          class="square"
-         [ngClass]="[getSquareClass(rowIndex, colIndex), selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : '']"
+         [ngClass]="[
+           getSquareClass(rowIndex, colIndex),
+           selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : ''
+         ]"
          (click)="onSquareClick(rowIndex, colIndex)">
       
-      <!-- Display the piece if the cell is not empty -->
-      <span *ngIf="cell" class="piece">{{ cell | uppercase }}</span>
+      <!-- Display the piece as an image if the cell is not empty -->
+      <img *ngIf="cell" [src]="getPieceImage(cell)" alt="{{ cell | uppercase }}" />
     </div>
   </div>
 </div>
@@ -18,6 +21,7 @@
   <button (click)="loadGames()">Load Game</button>
   <button (click)="saveGame()">Save Game</button>
 
+  <!-- Error message display -->
   <div *ngIf="invalidMoveMessage" style="color: red; margin-top: 10px;">
     {{ invalidMoveMessage }}
   </div>

@@ -16,6 +16,11 @@ export class ChessService {
     return this.http.get(`${this.apiUrl}/games`);
   }
 
+  // Get game by ID
+  getGameById(gameId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/games/${gameId}`);  // Fetch game details by ID
+  }
+
   // Create a new game
   createGame(game: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/create`, game);
@@ -41,9 +46,14 @@ export class ChessService {
     return this.http.put(`${this.apiUrl}/update`, game);
   }
 
-  // Move a piece on the board (this will be the most important part)
-  movePiece(from: string, to: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/move`, { from, to });
+  // Make a move in the game
+  movePiece(gameId: number, move: string) {
+    return this.http.post(`http://localhost:5000/api/chess/move?gameId=${gameId}`, move);
   }
 
+  // Alternative way to send a move (with gameId as query parameter)
+  makeMove(gameId: number, move: string): Observable<any> {
+    const url = `${this.apiUrl}/move?gameId=${gameId}`; // Include gameId as query parameter
+    return this.http.post(url, move); // Send the move in the request body
+  }
 }

@@ -40,7 +40,7 @@
   background-color: rgba(0, 255, 255, 0.2); /* Semi-transparent background */
 }
 
-/* Piece styling */
+/* Piece styling for text pieces */
 .piece {
   font-size: 3em;             /* Increased font size for visibility */
   color: black;               /* Default color for pieces */
@@ -56,6 +56,7 @@
   height: 70%;
   margin: auto;               /* Center images */
   object-fit: contain;        /* Keep images contained */
+  pointer-events: none;       /* Disable image interaction */
 }
 
 /* Controls section for buttons */

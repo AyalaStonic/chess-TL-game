@@ -25,9 +25,15 @@ export class ChessService {
     return this.http.post<any>(`${this.apiUrl}/move`, { from, to });
   }
 
+  // Make a move (game-specific)
+  makeMove(gameId: number, move: string) {
+    const url = `http://localhost:5000/api/chess/games/${gameId}/moves`; // Correct URL for the endpoint
+    return this.http.post(url, { move }, { responseType: 'json' }); // Wrap move in an object
+  }
+
   // Reset the game
-  resetGame(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/reset`, {}); // Calls the backend to reset the game
+  resetGame(gameId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reset/${gameId}`, {}); // Include gameId in the URL
   }
 
   // Save a game

@@ -23,23 +23,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add Swagger (if you need to expose API documentation)
+// Add Swagger for API documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Set the Content Security Policy header (allows unsafe-eval temporarily for testing)
-app.Use(async (context, next) =>
-{
-    // Use Append or indexer to set the header
-    context.Response.Headers["Content-Security-Policy"] = "script-src 'self' 'unsafe-eval'";
-    await next.Invoke();
-});
+// Configure the HTTP request pipeline
 
-// Use Swagger for API documentation (optional)
 if (app.Environment.IsDevelopment())
 {
+    // Use Swagger in development mode
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -47,8 +41,17 @@ if (app.Environment.IsDevelopment())
 // Use CORS policy
 app.UseCors("AllowLocalhost");
 
-// Use routing and controllers
+// Set the Content Security Policy header (optional, specific to your needs)
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Content-Security-Policy"] = "script-src 'self' 'unsafe-eval'";
+    await next.Invoke();
+});
+
+// Use routing middleware
 app.UseRouting();
-app.MapControllers();  // Maps the controller routes (like /api/chess/games)
+
+// Map controller routes
+app.MapControllers();
 
 app.Run();
