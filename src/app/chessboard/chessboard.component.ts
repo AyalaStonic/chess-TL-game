@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ChessService } from '../services/chess.service';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';  // Import CommonModule
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-chessboard',
@@ -9,9 +9,9 @@ import { CommonModule } from '@angular/common';  // Import CommonModule
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
   providers: [ChessService, HttpClient],
-  imports: [CommonModule]  // Add CommonModule here to resolve the *ngFor, *ngIf, ngClass, and uppercase pipe
+  imports: [CommonModule]
 })
-export class ChessboardComponent {
+export class ChessboardComponent implements OnInit {
   boardState: string[][] = [];
   selectedSquare: string | null = null;
   invalidMoveMessage: string | null = null;
@@ -44,7 +44,6 @@ export class ChessboardComponent {
   }
 
   makeMove(from: string, to: string) {
-    // Logic for making a move
     this.chessService.movePiece(from, to).subscribe(
       (response: any) => {
         this.selectedSquare = null;
@@ -52,12 +51,21 @@ export class ChessboardComponent {
         this.chessService.updateGame(this.currentGame).subscribe();
       },
       (error) => {
-        this.invalidMoveMessage = "Invalid move!";
+        this.invalidMoveMessage = 'Invalid move!';
       }
     );
   }
 
-  
+  // Start a new game
+  startNewGame() {
+    this.chessService.startNewGame().subscribe((newGame: any) => {
+      this.boardState = []; // Reset the board state
+      this.selectedSquare = null;
+      this.invalidMoveMessage = null;
+      this.currentGame = newGame; // Set the current game to the newly started game
+    });
+  }
+
   resetGame() {
     this.chessService.resetGame().subscribe(() => {
       this.boardState = [];
@@ -70,7 +78,6 @@ export class ChessboardComponent {
     this.chessService.saveGame(this.currentGame).subscribe();
   }
 
-  // Define the loadGames method
   loadGames() {
     this.chessService.getAllGames().subscribe((games: any) => {
       this.games = games;

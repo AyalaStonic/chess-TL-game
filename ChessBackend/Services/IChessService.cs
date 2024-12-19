@@ -16,5 +16,8 @@ namespace ChessBackend.Services
         
         // Adds a move to an existing game
         void AddMove(int gameId, string move);
+
+        // Starts a new game and returns it
+        Game StartNewGame();
     }
 }

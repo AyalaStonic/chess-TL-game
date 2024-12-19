@@ -56,5 +56,23 @@ namespace ChessBackend.Services
                 throw new KeyNotFoundException($"Game with ID {gameId} not found.");
             }
         }
+
+        // Start a new game - initialize a new game and add it to the list
+        public Game StartNewGame()
+        {
+            // Initialize the new game
+            var newGame = new Game
+            {
+                Id = _games.Count + 1, // Incremental ID generation (or you can implement a better strategy)
+                Name = $"Game {_games.Count + 1}",
+                Status = "In Progress",
+                Moves = new List<string>() // Empty list of moves at the start
+            };
+
+            // Add to the game list
+            _games.Add(newGame);
+
+            return newGame;
+        }
     }
 }

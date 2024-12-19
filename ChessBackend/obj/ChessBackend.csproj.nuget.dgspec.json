@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj": {}
+    "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj": {
+    "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj",
+        "projectUniqueName": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
         "projectName": "ChessBackend",
-        "projectPath": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\ChessBackend.csproj",
-        "packagesPath": "C:\\Users\\Paolo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Paolo\\Desktop\\chess-TL-game\\chessbackend\\obj\\",
+        "projectPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
+        "packagesPath": "C:\\Users\\dngor\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Paolo\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\dngor\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -44,6 +44,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Cors": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.0, )"

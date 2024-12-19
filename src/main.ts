@@ -4,6 +4,6 @@ import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideHttpClient(withFetch())  // Enables the fetch API for better performance
+    provideHttpClient(withFetch()) // Correctly configures HttpClient with fetch
   ]
-});
+}).catch(err => console.error('Error bootstrapping the application:', err));

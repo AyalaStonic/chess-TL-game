@@ -10,13 +10,15 @@ Backend with C#
 dotnet build
 dotnet run
 ```
+1. GET Request (Get All Games)
 
-Example in Postman:
+URL: http://localhost:5000/api/chess/games
+Method: GET
+
+2. POST Request (Create a New Game)
+
 URL: http://localhost:5000/api/chess/games
 Method: POST
-Headers: Content-Type: application/json
-Body:
-json
 
 {
   "name": "New Game",
@@ -24,6 +26,16 @@ json
   "moves": []
 }
 
+3. POST Request (Start a New Game)
+
+URL: http://localhost:5000/api/chess/games/start
+Method: POST
+
+{}
+
+4. POST Request (Move a Piece)
+
 URL: http://localhost:5000/api/chess/games/{gameId}/moves
-Same but
+Method: POST
+
 "e2 to e4"

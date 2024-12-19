@@ -9,11 +9,14 @@
   </div>
 </div>
 
-<!-- Controls for Reset, Save, and Load Game -->
+<!-- Controls for Reset, Save, Load, and Start New Game -->
 <div class="controls">
   <button (click)="resetGame()">Reset Game</button>
+  <button (click)="startNewGame()">Start New Game</button> <!-- New button for starting a new game -->
   <button (click)="loadGames()">Load Game</button>
   <button (click)="saveGame()">Save Game</button>
 
-  <div *ngIf="invalidMoveMessage" style="color: red; margin-top: 10px;">{{ invalidMoveMessage }}</div>
+  <div *ngIf="invalidMoveMessage" style="color: red; margin-top: 10px;">
+    {{ invalidMoveMessage }}
+  </div>
 </div>

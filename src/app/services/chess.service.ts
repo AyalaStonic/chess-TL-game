@@ -27,4 +27,9 @@ export class ChessService {
   saveGame(game: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/games`, game);
   }
+
+  // Add the startNewGame method to create a new game
+  startNewGame(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/games/start`, {}); // Sending an empty body to start a new game
+  }
 }

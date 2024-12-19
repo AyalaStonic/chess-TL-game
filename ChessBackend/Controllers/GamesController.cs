@@ -72,5 +72,19 @@ namespace ChessBackend.Controllers
             _chessService.AddMove(gameId, move);
             return Ok(game); // Return 200 OK with the updated game details
         }
+
+        // POST api/chess/games/start
+        [HttpPost("start")]
+        public IActionResult StartNewGame()
+        {
+            // Initialize a new game using the service
+            var newGame = _chessService.StartNewGame();
+            if (newGame == null)
+            {
+                return BadRequest("Could not start a new game."); // Handle any failure
+            }
+
+            return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame); // Return 201 Created with the new game
+        }
     }
 }
