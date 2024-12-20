@@ -9718,23 +9718,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\dngor\\.nuget\\packages\\": {},
+    "C:\\Users\\mindyourbussines\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
+      "projectUniqueName": "C:\\Users\\mindyourbussines\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
       "projectName": "ChessBackend",
-      "projectPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
-      "packagesPath": "C:\\Users\\dngor\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\dngor\\OneDrive\\Desktop\\chess-TL-game\\ChessBackend\\obj\\",
+      "projectPath": "C:\\Users\\mindyourbussines\\Desktop\\chess-TL-game\\ChessBackend\\ChessBackend.csproj",
+      "packagesPath": "C:\\Users\\mindyourbussines\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\mindyourbussines\\Desktop\\chess-TL-game\\ChessBackend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\dngor\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mindyourbussines\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
