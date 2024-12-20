@@ -16,13 +16,18 @@
 
 <!-- Controls for Reset, Save, Load, and Start New Game -->
 <div class="controls">
-  <button (click)="resetGame()">Reset Game</button>
   <button (click)="startNewGame()">Start New Game</button>
+  <button (click)="resetGame()">Reset Game</button>
   <button (click)="loadGames()">Load Game</button>
   <button (click)="saveGame()">Save Game</button>
 
   <!-- Error message display -->
-  <div *ngIf="invalidMoveMessage" style="color: red; margin-top: 10px;">
+  <div *ngIf="invalidMoveMessage" class="error-message">
     {{ invalidMoveMessage }}
   </div>
+</div>
+
+<!-- Replay Game Button (optional) -->
+<div class="replay-button">
+  <button *ngIf="currentGame" (click)="replayGame()">Replay Game</button>
 </div>

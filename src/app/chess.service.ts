@@ -28,12 +28,12 @@ export class ChessService {
 
   // Start a new game (reset the board to the initial state)
   startNewGame(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/start`, {});
+    return this.http.post(`${this.apiUrl}/start`, {});  // The empty object represents starting a new game
   }
 
   // Reset the current game to its initial state
-  resetGame(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reset`, {});
+  resetGame(gameId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset/${gameId}`, {});
   }
 
   // Save the current game state to the backend
@@ -47,7 +47,7 @@ export class ChessService {
   }
 
   // Make a move in the game
-  movePiece(gameId: number, move: string) {
+  movePiece(gameId: number, move: string): Observable<any> {
     return this.http.post(`http://localhost:5000/api/chess/move?gameId=${gameId}`, move);
   }
 
@@ -55,5 +55,15 @@ export class ChessService {
   makeMove(gameId: number, move: string): Observable<any> {
     const url = `${this.apiUrl}/move?gameId=${gameId}`; // Include gameId as query parameter
     return this.http.post(url, move); // Send the move in the request body
+  }
+
+  // Get all moves for a specific game
+  getMoves(gameId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/moves/${gameId}`);
+  }
+
+  // Mark a game as completed (when the game ends)
+  completeGame(gameId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/complete/${gameId}`, {});
   }
 }

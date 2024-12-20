@@ -26,7 +26,10 @@ namespace ChessBackend.Services
         // Marks a game as completed (updates status and sets EndedAt)
         void CompleteGame(int gameId);
 
-        // Save the game state (new method to be implemented)
+        // Save the game state (update game in the database)
         void SaveGame(Game game);
+        
+        // Returns a list of moves for a specific game
+        List<Move> GetMovesForGame(int gameId);
     }
 }

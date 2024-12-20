@@ -41,6 +41,20 @@ namespace ChessBackend.Controllers
             return Ok(game); // Return 200 OK with the game details
         }
 
+        // GET api/chess/games/{id}/moves
+        [HttpGet("games/{id}/moves")]
+        public IActionResult GetMoves(int id)
+        {
+            var game = _chessService.GetGameById(id);
+            if (game == null)
+            {
+                return NotFound(new { message = "Game not found." });
+            }
+
+            var moves = _chessService.GetMovesForGame(id); // Fetch moves for the game
+            return Ok(moves); // Return 200 OK with the list of moves
+        }
+
         // POST api/chess/move
         [HttpPost("move")]
         public IActionResult MakeMove([FromQuery] int gameId, [FromBody] string move)
@@ -110,7 +124,6 @@ namespace ChessBackend.Controllers
             }
         }
         
-
         // POST api/chess/save - Save the game state
         [HttpPost("save")]
         public IActionResult SaveGame([FromBody] Game game)
