@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ChessService } from '../chess.service';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { Chess } from 'chess.js';
 
 @Component({
   selector: 'app-chessboard',
@@ -18,8 +19,11 @@ export class ChessboardComponent implements OnInit {
   currentGame: any;
   games: any[] = [];
   gameId: number | null = null;
+  chess: Chess; // Declare chess.js instance
 
-  constructor(private chessService: ChessService, private http: HttpClient) {}
+  constructor(private chessService: ChessService, private http: HttpClient) {
+    this.chess = new Chess(); // Initialize chess.js instance
+  }
 
   ngOnInit() {
     this.initializeBoardState();
@@ -33,6 +37,7 @@ export class ChessboardComponent implements OnInit {
     this.currentGame = this.games.length > 0 ? this.games[0] : null;
     if (this.currentGame) {
       this.gameId = this.currentGame.id;
+      this.loadGameState(); // Load the game state into chess.js
     }
   }
 
@@ -48,6 +53,22 @@ export class ChessboardComponent implements OnInit {
       ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
       ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
     ];
+  }
+
+  // Update the board state from chess.js
+  updateBoardState() {
+    const board = this.chess.board(); // Get the current board state from chess.js
+    this.boardState = board.map((row: any) => row.map((piece: any) => piece ? piece.type.toUpperCase() : ''));
+  }
+
+  // Load the game state from the backend into chess.js
+  loadGameState() {
+    const moves = this.currentGame.moves; // Assuming moves are saved as a list
+    this.chess.reset(); // Reset the board to the initial state
+    moves.forEach((move: string) => {
+      this.chess.move(move); // Apply each move to the chess.js instance
+    });
+    this.updateBoardState(); // Update the displayed board state
   }
 
   // Determine the CSS class for a square based on its row and column index
@@ -76,14 +97,22 @@ export class ChessboardComponent implements OnInit {
 
   // Perform the move (send it to the backend)
   makeMove(from: string, to: string) {
-    const move = `${from}-${to}`;
-
-    this.chessService.movePiece(this.currentGame.id, move).subscribe(
+    // Create the move object with "from" and "to" as properties
+    const move = { from, to };
+  
+    this.chessService.movePiece(this.currentGame.id, `${from}${to}`).subscribe(
       (response: any) => {
         this.selectedSquare = null;
         this.invalidMoveMessage = null;
+        
         // Update the game state after the move
         this.chessService.updateGame(this.currentGame).subscribe();
+  
+        // Apply the move in chess.js
+        this.chess.move(`${from}${to}`);  // Make the move in chess.js
+  
+        // Update the board state
+        this.updateBoardState(); // Method to refresh the board after the move
       },
       (error) => {
         this.invalidMoveMessage = 'Invalid move!';
@@ -100,6 +129,7 @@ export class ChessboardComponent implements OnInit {
       this.invalidMoveMessage = null;
       this.currentGame = newGame;
       this.gameId = newGame.id;
+      this.chess.reset(); // Reset the chess.js instance for the new game
     });
   }
 
@@ -111,6 +141,7 @@ export class ChessboardComponent implements OnInit {
           this.initializeBoardState();
           this.selectedSquare = null;
           this.invalidMoveMessage = null;
+          this.chess.reset(); // Reset the chess.js board
         },
         (error) => {
           console.error('Error resetting game:', error);

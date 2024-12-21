@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -48,13 +48,16 @@ export class ChessService {
 
   // Make a move in the game
   movePiece(gameId: number, move: string): Observable<any> {
-    return this.http.post(`http://localhost:5000/api/chess/move?gameId=${gameId}`, move);
-  }
+    const body = {
+      gameId: gameId,  // Sending gameId as part of the body
+      move: move       // Move should be sent as a string
+    };
 
-  // Alternative way to send a move (with gameId as query parameter)
-  makeMove(gameId: number, move: string): Observable<any> {
-    const url = `${this.apiUrl}/move?gameId=${gameId}`; // Include gameId as query parameter
-    return this.http.post(url, move); // Send the move in the request body
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',  // Ensure the request is sent as JSON
+    });
+
+    return this.http.post(`${this.apiUrl}/move`, body, { headers });  // Sending the body with move data
   }
 
   // Get all moves for a specific game
