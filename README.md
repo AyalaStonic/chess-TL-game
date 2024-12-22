@@ -42,3 +42,21 @@ Method: POST
 
 
 start chrome --disable-web-security --user-data-dir="C:\chrome_dev"
+
+
+INSERT INTO Users (Username, Email)
+VALUES ('john_doe', 'john.doe@example.com');
+
+
+INSERT INTO Games (UserId, FEN)
+VALUES (1, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+
+INSERT INTO Moves (GameId, FromSquare, ToSquare, MoveNumber)
+VALUES (1, 'e2', 'e4', 1);
+
+SELECT * FROM Games WHERE UserId = 1;
+
+SELECT * FROM Moves WHERE GameId = 1 ORDER BY MoveNumber;
+
+
+SELECT FEN FROM Games WHERE Id = 1;

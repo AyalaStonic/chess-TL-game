@@ -4,11 +4,12 @@ using ChessBackend.Services;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-using System.Threading.Tasks;  // Import async Task
+using System.Threading.Tasks;
+using ChessDotNet;
 
 namespace ChessBackend.Controllers
 {
-    [Route("api/chess")]  // Route for all chess-related endpoints
+    [Route("api/chess")]
     [ApiController]
     public class GamesController : ControllerBase
     {
@@ -19,42 +20,41 @@ namespace ChessBackend.Controllers
             _chessService = chessService;
         }
 
-        // GET api/chess/games
+        // GET: api/chess/games
         [HttpGet("games")]
         public async Task<IActionResult> GetGames()
         {
             try
             {
-                var games = await _chessService.GetAllGames(); // Ensure async call
+                var games = await _chessService.GetAllGames();
 
-                // Check if games are available
                 if (games == null || !games.Any())
                 {
-                    return NotFound(new { message = "No games found." }); // Return 404 with a message if no games are found
+                    return NotFound(new { message = "No games found." });
                 }
 
-                // Return the games in a 200 OK response
-                return Ok(games); // Return the list of games in JSON format
+                return Ok(games);
             }
             catch (Exception ex)
             {
-                // Return 500 Internal Server Error with an error message
                 return StatusCode(500, new { message = "An error occurred while fetching the games.", error = ex.Message });
             }
         }
 
-        // GET api/chess/games/{id}
+        // GET: api/chess/games/{id}
         [HttpGet("games/{id}")]
         public async Task<IActionResult> GetGame(int id)
         {
             try
             {
-                var game = await _chessService.GetGameById(id); // Ensure async call
+                var game = await _chessService.GetGameById(id);
+
                 if (game == null)
                 {
-                    return NotFound(new { message = "Game not found." }); // Return 404 if the game with the specified ID is not found
+                    return NotFound(new { message = "Game not found." });
                 }
-                return Ok(game); // Return 200 OK with the game details
+
+                return Ok(game);
             }
             catch (Exception ex)
             {
@@ -62,20 +62,20 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // GET api/chess/games/{id}/moves
+        // GET: api/chess/games/{id}/moves
         [HttpGet("games/{id}/moves")]
         public async Task<IActionResult> GetMoves(int id)
         {
             try
             {
-                var game = await _chessService.GetGameById(id); // Ensure async call
-                if (game == null)
+                var moves = await _chessService.GetMovesForGame(id);
+
+                if (moves == null || !moves.Any())
                 {
-                    return NotFound(new { message = "Game not found." });
+                    return NotFound(new { message = "No moves found for this game." });
                 }
 
-                var moves = await _chessService.GetMovesForGame(id); // Fetch moves for the game
-                return Ok(moves); // Return 200 OK with the list of moves
+                return Ok(moves);
             }
             catch (Exception ex)
             {
@@ -83,53 +83,49 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST api/chess/move
+        // POST: api/chess/move
         [HttpPost("move")]
-        public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] Move move)
+        public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] ChessBackend.Models.Move move)
         {
             try
             {
-                var game = await _chessService.GetGameById(gameId); // Ensure async call
+                var game = await _chessService.GetGameById(gameId);
+
                 if (game == null)
                 {
                     return NotFound(new { message = "Game not found." });
                 }
 
-                // Validate the move and apply it
-                var isValidMove = await _chessService.ValidateMove(gameId, move); // Ensure ValidateMove method is async
+                var isValidMove = await _chessService.ValidateMove(gameId, move);
+
                 if (!isValidMove)
                 {
                     return BadRequest(new { message = "Invalid move." });
                 }
 
-                await _chessService.AddMove(gameId, move); // Add the move to the game
-                return Ok(new { message = "Move added successfully", game }); // Return the updated game
+                await _chessService.AddMove(gameId, move);
+
+                return Ok(new { message = "Move added successfully", game });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "Invalid move.", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while making the move.", error = ex.Message });
             }
         }
 
-        // POST api/chess/games
+        // POST: api/chess/games
         [HttpPost("games")]
         public async Task<IActionResult> AddGame([FromBody] Game game)
         {
             if (game == null)
             {
-                return BadRequest(new { message = "Invalid game data." }); // Return 400 if the provided game data is invalid
-            }
-
-            // Optional: Validate model before adding it
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState); // Return validation errors if any
+                return BadRequest(new { message = "Invalid game data." });
             }
 
             try
             {
-                await _chessService.AddGame(game); // Ensure async call
-                return CreatedAtAction(nameof(GetGame), new { id = game.Id }, game); // Return 201 Created with the location of the newly created game
+                await _chessService.AddGame(game);
+                return CreatedAtAction(nameof(GetGame), new { id = game.Id }, game);
             }
             catch (Exception ex)
             {
@@ -137,14 +133,14 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST api/chess/start
+        // POST: api/chess/start
         [HttpPost("start")]
-        public async Task<IActionResult> StartNewGame()
+        public async Task<IActionResult> StartNewGame([FromQuery] int userId)
         {
             try
             {
-                var newGame = await _chessService.StartNewGame(); // Ensure async call
-                return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame); // Return 201 Created with the new game
+                var newGame = await _chessService.StartNewGame(userId);
+                return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
             }
             catch (Exception ex)
             {
@@ -152,14 +148,14 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST api/chess/reset/{gameId} - Reset the game
+        // POST: api/chess/reset/{gameId}
         [HttpPost("reset/{gameId}")]
         public async Task<IActionResult> ResetGame(int gameId)
         {
             try
             {
-                var resetGame = await _chessService.ResetGame(gameId); // Ensure async call
-                return Ok(resetGame); // Return the reset game object
+                var resetGame = await _chessService.ResetGame(gameId);
+                return Ok(resetGame);
             }
             catch (KeyNotFoundException)
             {
@@ -171,23 +167,85 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST api/chess/save - Save the game state
+        // POST: api/chess/save
         [HttpPost("save")]
         public async Task<IActionResult> SaveGame([FromBody] Game game)
         {
             if (game == null)
             {
-                return BadRequest(new { message = "Invalid game data." }); // Return 400 if the game data is not valid
+                return BadRequest(new { message = "Invalid game data." });
             }
 
             try
             {
-                await _chessService.SaveGame(game); // Ensure async call
-                return Ok(new { message = "Game saved successfully" });
+                await _chessService.SaveGame(game);
+                return Ok(new { message = "Game saved successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error saving game", error = ex.Message }); // Return 500 error if something goes wrong
+                return StatusCode(500, new { message = "An error occurred while saving the game.", error = ex.Message });
+            }
+        }
+
+        // POST: api/chess/user
+        [HttpPost("user")]
+        public async Task<IActionResult> AddUser([FromBody] User user)
+        {
+            if (user == null)
+            {
+                return BadRequest(new { message = "Invalid user data." });
+            }
+
+            try
+            {
+                var createdUser = await _chessService.AddUser(user);
+                return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while adding the user.", error = ex.Message });
+            }
+        }
+
+        // GET: api/chess/user/{id}
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetUser(int id)
+        {
+            try
+            {
+                var user = await _chessService.GetUserById(id);
+
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching the user.", error = ex.Message });
+            }
+        }
+
+        // GET: api/chess/games/user/{userId}
+        [HttpGet("games/user/{userId}")]
+        public async Task<IActionResult> GetUserGames(int userId)
+        {
+            try
+            {
+                var games = await _chessService.GetGamesByUserId(userId);
+
+                if (games == null || !games.Any())
+                {
+                    return NotFound(new { message = "No games found for this user." });
+                }
+
+                return Ok(games);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while fetching games for the user.", error = ex.Message });
             }
         }
     }

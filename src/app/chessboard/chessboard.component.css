@@ -5,9 +5,9 @@
   grid-template-rows: repeat(8, 12vw);    /* 8 rows for chessboard */
   gap: 0;
   border: 5px solid #333;                 /* Dark border around the chessboard */
-  border-radius: 12px;                     /* Rounded corners */
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4); /* More subtle shadow for depth */
-  background: linear-gradient(135deg, #f3f3f3 25%, #ddd 75%); /* Gradient background for the board */
+  border-radius: 12px;                    /* Rounded corners */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4); /* Subtle shadow for depth */
+  background: linear-gradient(135deg, #f3f3f3 25%, #ddd 75%); /* Gradient background */
   margin: 20px auto;
 }
 
@@ -25,35 +25,35 @@
 
 /* Light and dark squares */
 .square.light {
-  background-color: #f3f3f3;  /* Light squares */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Light shadow for a soft effect */
+  background-color: #f3f3f3; /* Light squares */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Soft shadow effect */
 }
 
 .square.dark {
-  background-color: #4466c5;  /* Dark squares */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15); /* Dark shadow for contrast */
+  background-color: #4466c5; /* Dark squares */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15); /* Contrast shadow */
 }
 
 /* Hover effect on squares */
 .square:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Hover effect */
+  background-color: rgba(0, 0, 0, 0.1); /* Subtle hover highlight */
   transform: scale(1.1); /* Slight zoom-in effect on hover */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Shadow on hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Shadow for hover */
 }
 
 /* Highlight selected square */
 .square.selected {
   border: 3px solid rgba(0, 255, 255, 0.8); /* Bright border */
-  background-color: rgba(0, 255, 255, 0.2); /* Semi-transparent background */
-  transform: scale(1.05); /* Slight zoom-in effect when selected */
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); /* Glow effect on selection */
+  background-color: rgba(0, 255, 255, 0.2); /* Semi-transparent highlight */
+  transform: scale(1.05); /* Zoom effect */
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); /* Glow effect */
 }
 
-/* Piece styling for text pieces */
+/* Piece styling */
 .piece {
-  font-size: 3em;             /* Increased font size for visibility */
-  color: black;               /* Default color for pieces */
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease; /* Smooth animation for movement */
+  font-size: 3em; /* Large font for clarity */
+  color: black;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease; /* Smooth movement */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -61,12 +61,12 @@
 
 /* Image pieces inside squares */
 .square img {
-  width: 70%;                 /* Adjust image size */
+  width: 70%; /* Resize images */
   height: 70%;
-  margin: auto;               /* Center images */
-  object-fit: contain;        /* Keep images contained */
-  pointer-events: none;       /* Disable image interaction */
-  transition: transform 0.3s ease; /* Smooth movement transition */
+  margin: auto; /* Center */
+  object-fit: contain;
+  pointer-events: none; /* Disable interaction */
+  transition: transform 0.3s ease; /* Movement transition */
 }
 
 /* Controls section for buttons */
@@ -89,20 +89,20 @@ button {
   border-radius: 8px;
   margin-top: 10px;
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle depth */
 }
 
 /* Hover effect for buttons */
 button:hover {
-  background-color: #2980b9; /* Darker blue on hover */
-  transform: translateY(-2px); /* Lift effect on hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow for hover */
+  background-color: #2980b9; /* Darker hover */
+  transform: translateY(-2px); /* Lift effect */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow */
 }
 
 /* Disabled state for buttons */
 button:disabled {
-  background-color: #ddd; /* Light gray for disabled state */
-  color: #aaa; /* Lighter text */
+  background-color: #ddd; /* Light gray */
+  color: #aaa; /* Faded text */
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -110,13 +110,13 @@ button:disabled {
 
 /* Error message display */
 .error-message {
-  color: #ff4d4d; /* Red color for errors */
+  color: #ff4d4d; /* Red for errors */
   margin-top: 10px;
   font-size: 16px;
   font-weight: bold;
 }
 
-/* Replay Button Container */
+/* Replay button styling */
 .replay-button {
   margin-top: 20px;
   text-align: center;
@@ -125,7 +125,6 @@ button:disabled {
   align-items: center;
 }
 
-/* Replay button with a blue theme */
 .replay-button button {
   background-color: #3498db;
   font-size: 18px;
@@ -136,14 +135,12 @@ button:disabled {
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Hover effect for replay button */
 .replay-button button:hover {
   background-color: #2980b9;
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Disabled state for replay button */
 .replay-button button:disabled {
   background-color: #ddd;
   cursor: not-allowed;

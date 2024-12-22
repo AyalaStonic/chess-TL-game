@@ -1,7 +1,8 @@
 using ChessBackend.Models;
 using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;  // Import async Task
+using System.Threading.Tasks;
 
 namespace ChessBackend.Services
 {
@@ -20,9 +21,9 @@ namespace ChessBackend.Services
             var games = new List<Game>();
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
             {
-                await connection.OpenAsync();  // Asynchronous open
+                await connection.OpenAsync();
                 var command = new SqlCommand("SELECT * FROM Games", connection);
-                using (var reader = await command.ExecuteReaderAsync())  // Asynchronous read
+                using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
@@ -32,7 +33,8 @@ namespace ChessBackend.Services
                             Name = (string)reader["Name"],
                             Status = (string)reader["Status"],
                             CreatedAt = (DateTime)reader["CreatedAt"],
-                            EndedAt = reader["EndedAt"] as DateTime?
+                            EndedAt = reader["EndedAt"] as DateTime?,
+                            UserId = reader["UserId"] as int? // Link to the user who created the game
                         });
                     }
                 }
@@ -40,7 +42,7 @@ namespace ChessBackend.Services
             return games;
         }
 
-        // Get a specific game by its ID
+        // Get a specific game by ID
         public async Task<Game?> GetGameById(int id)
         {
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
@@ -48,6 +50,7 @@ namespace ChessBackend.Services
                 await connection.OpenAsync();
                 var command = new SqlCommand("SELECT * FROM Games WHERE Id = @Id", connection);
                 command.Parameters.AddWithValue("@Id", id);
+
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     if (await reader.ReadAsync())
@@ -58,7 +61,8 @@ namespace ChessBackend.Services
                             Name = (string)reader["Name"],
                             Status = (string)reader["Status"],
                             CreatedAt = (DateTime)reader["CreatedAt"],
-                            EndedAt = reader["EndedAt"] as DateTime?
+                            EndedAt = reader["EndedAt"] as DateTime?,
+                            UserId = reader["UserId"] as int?
                         };
                     }
                 }
@@ -72,26 +76,33 @@ namespace ChessBackend.Services
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
             {
                 await connection.OpenAsync();
-                var command = new SqlCommand("INSERT INTO Games (Name, Status, CreatedAt) OUTPUT INSERTED.Id VALUES (@Name, @Status, @CreatedAt)", connection);
+                var command = new SqlCommand(
+                    "INSERT INTO Games (Name, Status, CreatedAt, UserId) OUTPUT INSERTED.Id VALUES (@Name, @Status, @CreatedAt, @UserId)",
+                    connection
+                );
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@Status", game.Status);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt);
+                command.Parameters.AddWithValue("@UserId", game.UserId ?? (object)DBNull.Value); // Handle nullable user ID
 
-                game.Id = (int)await command.ExecuteScalarAsync();  // Asynchronous query execution
+                game.Id = (int)await command.ExecuteScalarAsync();
             }
         }
 
-        // Add a move to a specific game by game ID
+        // Add a move to a specific game
         public async Task AddMove(int gameId, Move move)
         {
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
             {
                 await connection.OpenAsync();
-                var command = new SqlCommand("INSERT INTO Moves (GameId, Move, MoveOrder) VALUES (@GameId, @Move, (SELECT COUNT(*) + 1 FROM Moves WHERE GameId = @GameId))", connection);
+                var command = new SqlCommand(
+                    "INSERT INTO Moves (GameId, Move, MoveOrder) VALUES (@GameId, @Move, (SELECT COUNT(*) + 1 FROM Moves WHERE GameId = @GameId))",
+                    connection
+                );
                 command.Parameters.AddWithValue("@GameId", gameId);
-                command.Parameters.AddWithValue("@Move", move.MoveData);  // Assuming MoveData stores the move representation
+                command.Parameters.AddWithValue("@Move", move.MoveData);
 
-                await command.ExecuteNonQueryAsync();  // Asynchronous query execution
+                await command.ExecuteNonQueryAsync();
             }
         }
 
@@ -113,31 +124,31 @@ namespace ChessBackend.Services
                         {
                             Id = (int)reader["Id"],
                             GameId = (int)reader["GameId"],
-                            MoveData = (string)reader["Move"],  // Adjusted to match your field
+                            MoveData = (string)reader["Move"],
                             MoveOrder = (int)reader["MoveOrder"]
                         });
                     }
                 }
             }
-
             return moves;
         }
 
         // Start a new game
-        public async Task<Game> StartNewGame()
+        public async Task<Game> StartNewGame(int userId)
         {
             var newGame = new Game
             {
                 Name = $"Game {DateTime.UtcNow.Ticks}",
                 Status = "In Progress",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UserId = userId // Link the game to the user
             };
 
             await AddGame(newGame);
             return newGame;
         }
 
-        // Reset a specific game by game ID
+        // Reset a specific game by ID
         public async Task<Game> ResetGame(int gameId)
         {
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
@@ -149,13 +160,16 @@ namespace ChessBackend.Services
                 deleteCommand.Parameters.AddWithValue("@GameId", gameId);
                 await deleteCommand.ExecuteNonQueryAsync();
 
-                // Reset the game's status
-                var updateCommand = new SqlCommand("UPDATE Games SET Status = 'In Progress', EndedAt = NULL WHERE Id = @GameId", connection);
+                // Reset game's status
+                var updateCommand = new SqlCommand(
+                    "UPDATE Games SET Status = 'In Progress', EndedAt = NULL WHERE Id = @GameId",
+                    connection
+                );
                 updateCommand.Parameters.AddWithValue("@GameId", gameId);
                 await updateCommand.ExecuteNonQueryAsync();
             }
 
-            return await GetGameById(gameId)!;
+            return await GetGameById(gameId) ?? throw new Exception("Game not found");
         }
 
         // Mark a game as completed
@@ -164,7 +178,10 @@ namespace ChessBackend.Services
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
             {
                 await connection.OpenAsync();
-                var command = new SqlCommand("UPDATE Games SET Status = 'Completed', EndedAt = @EndedAt WHERE Id = @GameId", connection);
+                var command = new SqlCommand(
+                    "UPDATE Games SET Status = 'Completed', EndedAt = @EndedAt WHERE Id = @GameId",
+                    connection
+                );
                 command.Parameters.AddWithValue("@EndedAt", DateTime.UtcNow);
                 command.Parameters.AddWithValue("@GameId", gameId);
 
@@ -172,13 +189,16 @@ namespace ChessBackend.Services
             }
         }
 
-        // Save a game (Update the game state in the database)
+        // Save a game
         public async Task SaveGame(Game game)
         {
             using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
             {
                 await connection.OpenAsync();
-                var command = new SqlCommand("UPDATE Games SET Name = @Name, Status = @Status, CreatedAt = @CreatedAt, EndedAt = @EndedAt WHERE Id = @Id", connection);
+                var command = new SqlCommand(
+                    "UPDATE Games SET Name = @Name, Status = @Status, CreatedAt = @CreatedAt, EndedAt = @EndedAt WHERE Id = @Id",
+                    connection
+                );
                 command.Parameters.AddWithValue("@Name", game.Name);
                 command.Parameters.AddWithValue("@Status", game.Status);
                 command.Parameters.AddWithValue("@CreatedAt", game.CreatedAt);
@@ -189,12 +209,112 @@ namespace ChessBackend.Services
             }
         }
 
-        // Optional: Validate a move (you can implement this logic depending on the chess rules)
+        // Validate a move (custom logic if needed)
         public async Task<bool> ValidateMove(int gameId, Move move)
         {
-            // Implement your move validation logic here (e.g., check if the move is legal)
-            // For example:
-            return true; // Assuming the move is valid (you can add your actual logic here)
+            // Placeholder for actual move validation logic
+            return true;
+        }
+
+        // Add a user to a game (for linking games to users)
+        public async Task AddUserToGame(int gameId, int userId)
+        {
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+            {
+                await connection.OpenAsync();
+                var command = new SqlCommand(
+                    "INSERT INTO GameUsers (GameId, UserId) VALUES (@GameId, @UserId)",
+                    connection
+                );
+                command.Parameters.AddWithValue("@GameId", gameId);
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        // Get games by user ID
+        public async Task<IEnumerable<Game>> GetGamesByUserId(int userId)
+        {
+            var games = new List<Game>();
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+            {
+                await connection.OpenAsync();
+                var command = new SqlCommand(
+                    "SELECT G.* FROM Games G JOIN GameUsers GU ON G.Id = GU.GameId WHERE GU.UserId = @UserId",
+                    connection
+                );
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        games.Add(new Game
+                        {
+                            Id = (int)reader["Id"],
+                            Name = (string)reader["Name"],
+                            Status = (string)reader["Status"],
+                            CreatedAt = (DateTime)reader["CreatedAt"],
+                            EndedAt = reader["EndedAt"] as DateTime?,
+                            UserId = reader["UserId"] as int?
+                        });
+                    }
+                }
+            }
+            return games;
+        }
+
+        // Add a user to the database
+        public async Task<User> AddUser(User user)
+        {
+            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Name))
+            {
+                throw new ArgumentException("Both Username and Name must be provided.");
+            }
+
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+            {
+                await connection.OpenAsync();
+                var command = new SqlCommand(
+                    "INSERT INTO Users (Username, Name, Email) OUTPUT INSERTED.Id VALUES (@Username, @Name, @Email)",
+                    connection
+                );
+                command.Parameters.AddWithValue("@Username", user.Username);
+                command.Parameters.AddWithValue("@Name", user.Name);
+                command.Parameters.AddWithValue("@Email", user.Email);
+
+                // Insert the user and get the generated Id.
+                user.Id = (int)await command.ExecuteScalarAsync();
+            }
+
+            return user; // Return the created user with the generated Id.
+        }
+
+        // Get a user by ID
+        public async Task<User?> GetUserById(int userId)
+        {
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+            {
+                await connection.OpenAsync();
+                var command = new SqlCommand("SELECT * FROM Users WHERE Id = @UserId", connection);
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new User
+                        {
+                            Id = (int)reader["Id"],
+                            Username = (string)reader["Username"],
+                            Name = (string)reader["Name"],
+                            Email = (string)reader["Email"]
+                        };
+                    }
+                }
+            }
+            return null;
         }
     }
 }

@@ -1,33 +1,66 @@
 <div class="chessboard">
-  <div *ngFor="let row of boardState; let rowIndex = index">
-    <div *ngFor="let cell of row; let colIndex = index"
-         class="square"
-         [ngClass]="[
-           getSquareClass(rowIndex, colIndex),
-           selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : ''
-         ]"
-         (click)="onSquareClick(rowIndex, colIndex)">
+  <div *ngFor="let row of boardState; let rowIndex = index" class="row">
+    <div
+      *ngFor="let cell of row; let colIndex = index"
+      class="square"
+      [ngClass]="[
+        getSquareClass(rowIndex, colIndex),
+        selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : ''
+      ]"
+      (click)="onSquareClick(rowIndex, colIndex)"
+      [attr.aria-label]="'Chess square ' + getSquareFromIndices(rowIndex, colIndex)">
       
       <!-- Display the piece as an image if the cell is not empty -->
-      <img *ngIf="cell" [src]="getPieceImage(cell)" alt="{{ cell | uppercase }}" />
+      <img
+        *ngIf="cell"
+        [src]="getPieceImage(cell)"
+        [alt]="cell | uppercase"
+        class="chess-piece" />
     </div>
   </div>
 </div>
 
-<!-- Controls for Reset, Save, Load, and Start New Game -->
+<!-- Controls for Game Management -->
 <div class="controls">
   <button (click)="startNewGame()">Start New Game</button>
-  <button (click)="resetGame()">Reset Game</button>
-  <button (click)="loadGames()">Load Game</button>
-  <button (click)="saveGame()">Save Game</button>
+  <button [disabled]="!currentGame" (click)="resetGame()">Reset Game</button>
+  <button (click)="loadGames()">Load Games</button>
+  <button [disabled]="!currentGame" (click)="saveGame()">Save Game</button>
 
-  <!-- Error message display -->
+  <!-- Display an error message if a move is invalid -->
   <div *ngIf="invalidMoveMessage" class="error-message">
     {{ invalidMoveMessage }}
   </div>
 </div>
 
-<!-- Replay Game Button (optional) -->
-<div class="replay-button">
+<!-- Game Selector -->
+<div class="game-selector">
+  <label for="gameSelect">Select Game:</label>
+  <select
+    id="gameSelect"
+    [(ngModel)]="gameId"
+    (change)="loadGameState()"
+    [disabled]="!games.length">
+    <option *ngFor="let game of games" [value]="game.id">
+      Game #{{ game.id }} ({{ game.dateCreated | date: 'short' }})
+    </option>
+  </select>
+</div>
+
+<!-- Replay Game Button -->
+<div class="replay-controls">
   <button *ngIf="currentGame" (click)="replayGame()">Replay Game</button>
+</div>
+
+<!-- User Management -->
+<div class="user-controls">
+  <label for="username">Username:</label>
+  <input
+    type="text"
+    id="username"
+    [(ngModel)]="username"
+    placeholder="Enter your username" />
+
+  <button (click)="createUser()">Create User</button>
+  <button *ngIf="currentUser" (click)="logout()">Logout</button>
 </div>

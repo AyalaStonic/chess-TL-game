@@ -2,27 +2,31 @@ namespace ChessBackend.Models
 {
     public class Game
     {
-        public int Id { get; set; }  // GameId equivalent
+        // Unique identifier for the game
+        public int Id { get; set; }
 
-        // Use required to ensure Name is not null
+        // Name of the game (e.g., "Game 1")
         public required string Name { get; set; }
 
-        // Status to track whether the game is ongoing or finished
+        // Status to track the state of the game (e.g., "ongoing", "finished")
         public required string Status { get; set; }
 
-        // List of moves made during the game (each move as a string)
-        public List<Move> Moves { get; set; } = new List<Move>();  // List of Move objects
+        // List of moves made during the game (one-to-many relationship with Move)
+        public List<Move> Moves { get; set; } = new List<Move>();
 
-        // Optional: Tracking the date and time when the game was created
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Default to current UTC time when the game is created
+        // Date and time when the game was created
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Optional: Tracking when the game ended
-        public DateTime? EndedAt { get; set; }  // Nullable DateTime for end time (null if the game is ongoing)
+        // Nullable: Date and time when the game ended
+        public DateTime? EndedAt { get; set; }
 
-        // Additional Optional Property: Tracking the FEN (Forsyth-Edwards Notation) of the current game state
-        public string? FEN { get; set; }  // Nullable string for FEN representation of the game state
+        // The current game state in FEN format (can be used for replay)
+        public string? FEN { get; set; }
 
-        // Additional Optional Property: UserId if you wish to link a game to a user (for user management)
-        public int? UserId { get; set; }  // Nullable UserId for optional user linkage
+        // Nullable: User ID if the game is linked to a user
+        public int? UserId { get; set; }
+
+        // Optional: Navigation property for user linking
+        public User? User { get; set; } // User that the game is associated with (if applicable)
     }
 }

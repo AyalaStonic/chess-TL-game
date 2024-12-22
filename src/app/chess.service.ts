@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core'; 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -12,10 +12,14 @@ export class ChessService {
   constructor(private http: HttpClient) { }
 
   // Get all games from the server
-  getAllGames(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/games`);
+  getAllGames(userId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/games/${userId}`);  // Fetch games by userId
   }
 
+  createUser(user: { username: string, email: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/users/create`, user);
+  }
+  
   // Get game by ID
   getGameById(gameId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/games/${gameId}`);  // Fetch game details by ID
@@ -27,8 +31,8 @@ export class ChessService {
   }
 
   // Start a new game (reset the board to the initial state)
-  startNewGame(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/start`, {});  // The empty object represents starting a new game
+  startNewGame(userId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/start/${userId}`, {});  // Start a new game for a specific user
   }
 
   // Reset the current game to its initial state
@@ -47,10 +51,10 @@ export class ChessService {
   }
 
   // Make a move in the game
-  movePiece(gameId: number, move: string): Observable<any> {
+  movePiece(gameId: number, move: { from: string, to: string }): Observable<any> {
     const body = {
       gameId: gameId,  // Sending gameId as part of the body
-      move: move       // Move should be sent as a string
+      move: move       // Move should be sent as an object with 'from' and 'to' properties
     };
 
     const headers = new HttpHeaders({

@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ChessService } from '../chess.service';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Chess } from 'chess.js';
+import { FormsModule } from '@angular/forms';  // Import FormsModule for ngModel
+import { HttpErrorResponse } from '@angular/common/http'; // Import for error handling
 
 @Component({
   selector: 'app-chessboard',
@@ -10,35 +11,23 @@ import { Chess } from 'chess.js';
   templateUrl: './chessboard.component.html',
   styleUrls: ['./chessboard.component.css'],
   providers: [ChessService, HttpClient],
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],  // Add FormsModule here
 })
 export class ChessboardComponent implements OnInit {
   boardState: string[][] = [];
   selectedSquare: string | null = null;
   invalidMoveMessage: string | null = null;
-  currentGame: any;
+  currentGame: any = null;
   games: any[] = [];
   gameId: number | null = null;
-  chess: Chess; // Declare chess.js instance
+  username: string = '';
+  currentUser: any = null;  // User object to manage current user
 
-  constructor(private chessService: ChessService, private http: HttpClient) {
-    this.chess = new Chess(); // Initialize chess.js instance
-  }
+  constructor(private chessService: ChessService, private http: HttpClient) {}
 
   ngOnInit() {
     this.initializeBoardState();
-
-    // Fetch existing games (if needed)
-    this.chessService.getAllGames().subscribe((games: any) => {
-      this.games = games;
-    });
-
-    // Get the first game (for example purposes, adjust as necessary)
-    this.currentGame = this.games.length > 0 ? this.games[0] : null;
-    if (this.currentGame) {
-      this.gameId = this.currentGame.id;
-      this.loadGameState(); // Load the game state into chess.js
-    }
+    this.loadGames();
   }
 
   // Initialize the chessboard to its default state
@@ -51,34 +40,60 @@ export class ChessboardComponent implements OnInit {
       ['', '', '', '', '', '', '', ''],
       ['', '', '', '', '', '', '', ''],
       ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
     ];
   }
 
-  // Update the board state from chess.js
-  updateBoardState() {
-    const board = this.chess.board(); // Get the current board state from chess.js
-    this.boardState = board.map((row: any) => row.map((piece: any) => piece ? piece.type.toUpperCase() : ''));
+  // Fetch all games from the backend
+  loadGames() {
+    if (this.currentUser) {
+      this.chessService.getAllGames(this.currentUser.id).subscribe(
+        (games: any[]) => {
+          this.games = games;
+          if (this.games.length > 0) {
+            this.currentGame = this.games[0];
+            this.gameId = this.currentGame.id;
+            this.loadGameState();
+          }
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error fetching games:', error);
+        }
+      );
+    }
   }
 
-  // Load the game state from the backend into chess.js
+  // Load the current game's state from the backend
   loadGameState() {
-    const moves = this.currentGame.moves; // Assuming moves are saved as a list
-    this.chess.reset(); // Reset the board to the initial state
-    moves.forEach((move: string) => {
-      this.chess.move(move); // Apply each move to the chess.js instance
+    if (this.gameId !== null) {
+      this.chessService.getGameById(this.gameId).subscribe(
+        (game: any) => {
+          this.currentGame = game;
+          this.boardState = this.convertFENToBoard(game.fen);
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error loading game state:', error);
+        }
+      );
+    }
+  }
+
+  // Convert FEN string to a 2D array representing the board state
+  convertFENToBoard(fen: string): string[][] {
+    const rows = fen.split(' ')[0].split('/');
+    return rows.map((row) => {
+      const boardRow: string[] = [];
+      for (const char of row) {
+        if (isNaN(Number(char))) {
+          boardRow.push(char);
+        } else {
+          for (let i = 0; i < Number(char); i++) {
+            boardRow.push('');
+          }
+        }
+      }
+      return boardRow;
     });
-    this.updateBoardState(); // Update the displayed board state
-  }
-
-  // Determine the CSS class for a square based on its row and column index
-  getSquareClass(rowIndex: number, colIndex: number): string {
-    return (rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark';
-  }
-
-  // Convert row and column indices to a chess square notation (e.g., A1, H8)
-  getSquareFromIndices(rowIndex: number, colIndex: number): string {
-    return `${String.fromCharCode(65 + colIndex)}${8 - rowIndex}`;
   }
 
   // Handle a click on a square
@@ -86,35 +101,33 @@ export class ChessboardComponent implements OnInit {
     const square = this.getSquareFromIndices(rowIndex, colIndex);
 
     if (this.selectedSquare) {
-      // Make the move if a square is selected
       this.makeMove(this.selectedSquare, square);
       this.selectedSquare = null;
     } else {
-      // Select a square to start the move
       this.selectedSquare = square;
     }
   }
 
-  // Perform the move (send it to the backend)
+  // Convert row and column indices to chess notation (e.g., A1)
+  getSquareFromIndices(rowIndex: number, colIndex: number): string {
+    return `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
+  }
+
+  // Perform a move and update the game state
   makeMove(from: string, to: string) {
-    // Create the move object with "from" and "to" as properties
+    if (this.gameId === null) {
+      console.error('Game ID is null. Cannot make a move.');
+      return;
+    }
+
     const move = { from, to };
-  
-    this.chessService.movePiece(this.currentGame.id, `${from}${to}`).subscribe(
+
+    this.chessService.movePiece(this.gameId, move).subscribe(
       (response: any) => {
-        this.selectedSquare = null;
         this.invalidMoveMessage = null;
-        
-        // Update the game state after the move
-        this.chessService.updateGame(this.currentGame).subscribe();
-  
-        // Apply the move in chess.js
-        this.chess.move(`${from}${to}`);  // Make the move in chess.js
-  
-        // Update the board state
-        this.updateBoardState(); // Method to refresh the board after the move
+        this.loadGameState();
       },
-      (error) => {
+      (error: HttpErrorResponse) => {
         this.invalidMoveMessage = 'Invalid move!';
         console.error('Error making move:', error);
       }
@@ -123,27 +136,32 @@ export class ChessboardComponent implements OnInit {
 
   // Start a new game
   startNewGame() {
-    this.chessService.startNewGame().subscribe((newGame: any) => {
-      this.initializeBoardState();
-      this.selectedSquare = null;
-      this.invalidMoveMessage = null;
-      this.currentGame = newGame;
-      this.gameId = newGame.id;
-      this.chess.reset(); // Reset the chess.js instance for the new game
-    });
-  }
-
-  // Reset the current game
-  resetGame(): void {
-    if (this.gameId !== null) {
-      this.chessService.resetGame(this.gameId).subscribe(
-        (response) => {
+    if (this.currentUser) {
+      this.chessService.startNewGame(this.currentUser.id).subscribe(
+        (newGame: any) => {
           this.initializeBoardState();
           this.selectedSquare = null;
           this.invalidMoveMessage = null;
-          this.chess.reset(); // Reset the chess.js board
+          this.currentGame = newGame;
+          this.gameId = newGame.id;
         },
-        (error) => {
+        (error: HttpErrorResponse) => {
+          console.error('Error starting new game:', error);
+        }
+      );
+    }
+  }
+
+  // Reset the current game
+  resetGame() {
+    if (this.gameId !== null) {
+      this.chessService.resetGame(this.gameId).subscribe(
+        () => {
+          this.initializeBoardState();
+          this.selectedSquare = null;
+          this.invalidMoveMessage = null;
+        },
+        (error: HttpErrorResponse) => {
           console.error('Error resetting game:', error);
         }
       );
@@ -154,58 +172,88 @@ export class ChessboardComponent implements OnInit {
 
   // Save the current game
   saveGame() {
-    this.chessService.saveGame(this.currentGame).subscribe(
-      (response) => {
-        console.log('Game saved successfully:', response);
-      },
-      (error) => {
-        console.error('Error saving game:', error);
-      }
-    );
+    if (this.currentGame) {
+      this.chessService.saveGame(this.currentGame).subscribe(
+        (response) => {
+          console.log('Game saved successfully:', response);
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error saving game:', error);
+        }
+      );
+    } else {
+      console.error('No current game to save!');
+    }
   }
 
-  // Load all games
-  loadGames() {
-    this.chessService.getAllGames().subscribe((games: any) => {
-      this.games = games;
-    });
+  // Replay the game from the beginning
+  replayGame() {
+    if (this.currentGame) {
+      const moves = this.currentGame.moves;
+      this.initializeBoardState();
+      this.invalidMoveMessage = null;
+      this.selectedSquare = null;
+
+      moves.forEach((move: any, index: number) => {
+        setTimeout(() => {
+          this.makeMove(move.from, move.to);
+        }, index * 1000);
+      });
+    } else {
+      console.error('No game selected to replay!');
+    }
   }
 
   // Map the board state to piece images for display
   getPieceImage(piece: string): string {
-    if (!piece) return ''; // Return empty string if no piece
+    if (!piece) return '';
     const pieceMap: { [key: string]: string } = {
-      'K': 'white_king',
-      'Q': 'white_queen',
-      'R': 'white_rook',
-      'B': 'white_bishop',
-      'N': 'white_knight',
-      'P': 'white_pawn',
-      'k': 'black_king',
-      'q': 'black_queen',
-      'r': 'black_rook',
-      'b': 'black_bishop',
-      'n': 'black_knight',
-      'p': 'black_pawn',
+      K: 'white_king',
+      Q: 'white_queen',
+      R: 'white_rook',
+      B: 'white_bishop',
+      N: 'white_knight',
+      P: 'white_pawn',
+      k: 'black_king',
+      q: 'black_queen',
+      r: 'black_rook',
+      b: 'black_bishop',
+      n: 'black_knight',
+      p: 'black_pawn',
     };
     return `./chess-pieces/${pieceMap[piece]}.png`;
   }
 
-  // Replay the game (fetch all moves and play them)
-  replayGame() {
-    if (this.gameId !== null) {
-      this.chessService.getMoves(this.gameId).subscribe((moves: any) => {
-        moves.forEach((move: string, index: number) => {
-          setTimeout(() => {
-            // Simulate the move on the board
-            const from = move.split('-')[0];
-            const to = move.split('-')[1];
-            this.makeMove(from, to);
-          }, index * 1000);  // Adjust timing between moves if necessary
-        });
-      });
-    } else {
-      console.error('No game selected for replay!');
+  // Get the class for each square
+  getSquareClass(rowIndex: number, colIndex: number): string {
+    const isLightSquare = (rowIndex + colIndex) % 2 === 0;
+    return isLightSquare ? 'square light' : 'square dark';
+  }
+
+  // User Management Functions
+
+  // Create a new user
+  createUser() {
+    if (this.username) {
+      this.chessService.createUser({ username: this.username, email: '' }).subscribe(
+        (user: any) => {
+          this.currentUser = user;
+          console.log('User created successfully:', user);
+          this.loadGames();
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error creating user:', error);
+        }
+      );
     }
+  }
+
+  // Logout the current user
+  logout() {
+    this.currentUser = null;
+    this.games = [];
+    this.currentGame = null;
+    this.gameId = null;
+    console.log('User logged out');
   }
 }
