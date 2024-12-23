@@ -208,7 +208,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET: api/chess/user/{id}
-        [HttpGet("user/{id}")]
+         [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
             try
@@ -229,7 +229,7 @@ namespace ChessBackend.Controllers
         }
 
         // GET: api/chess/games/user/{userId}
-        [HttpGet("games/user/{userId}")]
+         [HttpGet("games/user/{userId}")]
         public async Task<IActionResult> GetUserGames(int userId)
         {
             try

@@ -16,13 +16,17 @@ export class ChessService {
     return this.http.get(`${this.apiUrl}/games/${userId}`);  // Fetch games by userId
   }
 
-  createUser(user: { username: string, email: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/users/create`, user);
+  createUser(user: { username: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/user`, user);
   }
   
   // Get game by ID
   getGameById(gameId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/games/${gameId}`);  // Fetch game details by ID
+  }
+
+  getGamesByUserId(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:5000/api/chess/user/${userId}`);
   }
 
   // Create a new game

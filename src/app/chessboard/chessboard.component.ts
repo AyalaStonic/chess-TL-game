@@ -44,24 +44,54 @@ export class ChessboardComponent implements OnInit {
     ];
   }
 
-  // Fetch all games from the backend
-  loadGames() {
-    if (this.currentUser) {
-      this.chessService.getAllGames(this.currentUser.id).subscribe(
-        (games: any[]) => {
-          this.games = games;
-          if (this.games.length > 0) {
-            this.currentGame = this.games[0];
-            this.gameId = this.currentGame.id;
-            this.loadGameState();
-          }
+  createUser() {
+    if (this.username) {
+      const user = { username: this.username };
+
+      this.chessService.createUser(user).subscribe(
+        (user: any) => {
+          this.currentUser = user;
+          console.log('User created successfully:', user);
+          this.loadGames();  // If needed to load games for the user
         },
-        (error: HttpErrorResponse) => {
-          console.error('Error fetching games:', error);
+        (error) => {
+          console.error('Error creating user:', error);  // Log actual error
+          alert('Failed to create user');
         }
       );
+    } else {
+      alert('Please enter a username');
     }
   }
+
+// Fetch all games from the backend for the current user
+loadGames() {
+  if (this.currentUser) {
+    this.chessService.getGamesByUserId(this.currentUser.id).subscribe(
+      (games: any[] | null | undefined) => {
+        // Ensure games is an array
+        this.games = Array.isArray(games) ? games : [];
+        if (this.games.length > 0) {
+          this.currentGame = this.games[0];
+          this.gameId = this.currentGame.id;
+          this.loadGameState();
+        } else {
+          this.currentGame = null;
+          this.gameId = null;
+        }
+      },
+      (error: HttpErrorResponse) => {
+        console.error('Error fetching games:', error);
+        this.games = []; // Reset games in case of error
+      }
+    );
+  } else {
+    this.games = []; // Ensure games is reset when no user is logged in
+    console.warn('No current user found. Cannot load games.');
+  }
+}
+
+
 
   // Load the current game's state from the backend
   loadGameState() {
@@ -228,24 +258,6 @@ export class ChessboardComponent implements OnInit {
   getSquareClass(rowIndex: number, colIndex: number): string {
     const isLightSquare = (rowIndex + colIndex) % 2 === 0;
     return isLightSquare ? 'square light' : 'square dark';
-  }
-
-  // User Management Functions
-
-  // Create a new user
-  createUser() {
-    if (this.username) {
-      this.chessService.createUser({ username: this.username, email: '' }).subscribe(
-        (user: any) => {
-          this.currentUser = user;
-          console.log('User created successfully:', user);
-          this.loadGames();
-        },
-        (error: HttpErrorResponse) => {
-          console.error('Error creating user:', error);
-        }
-      );
-    }
   }
 
   // Logout the current user

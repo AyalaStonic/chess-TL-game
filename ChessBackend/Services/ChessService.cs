@@ -223,7 +223,7 @@ namespace ChessBackend.Services
             {
                 await connection.OpenAsync();
                 var command = new SqlCommand(
-                    "INSERT INTO GameUsers (GameId, UserId) VALUES (@GameId, @UserId)",
+                    "INSERT INTO UsersGames (GameId, UserId) VALUES (@GameId, @UserId)",
                     connection
                 );
                 command.Parameters.AddWithValue("@GameId", gameId);
@@ -234,62 +234,67 @@ namespace ChessBackend.Services
         }
 
         // Get games by user ID
-        public async Task<IEnumerable<Game>> GetGamesByUserId(int userId)
-        {
-            var games = new List<Game>();
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
-            {
-                await connection.OpenAsync();
-                var command = new SqlCommand(
-                    "SELECT G.* FROM Games G JOIN GameUsers GU ON G.Id = GU.GameId WHERE GU.UserId = @UserId",
-                    connection
-                );
-                command.Parameters.AddWithValue("@UserId", userId);
+public async Task<IEnumerable<Game>> GetGamesByUserId(int userId)
+{
+    var games = new List<Game>();
+    using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+    {
+        await connection.OpenAsync();
+        
+        // Fix the typo from 'U.Id' to 'G.Id' and ensure proper table and column references
+        var command = new SqlCommand(
+            "SELECT G.* FROM Games G " + 
+            "JOIN UsersGames UG ON G.Id = UG.GameId " + // Corrected the JOIN condition
+            "WHERE UG.UserId = @UserId", 
+            connection
+        );
 
-                using (var reader = await command.ExecuteReaderAsync())
+        // Add the @UserId parameter
+        command.Parameters.AddWithValue("@UserId", userId);
+
+        using (var reader = await command.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                games.Add(new Game
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        games.Add(new Game
-                        {
-                            Id = (int)reader["Id"],
-                            Name = (string)reader["Name"],
-                            Status = (string)reader["Status"],
-                            CreatedAt = (DateTime)reader["CreatedAt"],
-                            EndedAt = reader["EndedAt"] as DateTime?,
-                            UserId = reader["UserId"] as int?
-                        });
-                    }
-                }
+                    Id = (int)reader["Id"],
+                    Name = reader["Name"] as string,
+                    Status = reader["Status"] as string,
+                    CreatedAt = (DateTime)reader["CreatedAt"],
+                    EndedAt = reader["EndedAt"] as DateTime?,
+                    UserId = reader["UserId"] as int? // This may not be needed if UserId is not in the Games table
+                });
             }
-            return games;
         }
+    }
+    return games;
+}
 
-        // Add a user to the database
-        public async Task<User> AddUser(User user)
-        {
-            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Name))
-            {
-                throw new ArgumentException("Both Username and Name must be provided.");
-            }
+       // Add a user to the database
+public async Task<User> AddUser(User user)
+{
+    if (string.IsNullOrWhiteSpace(user.Username)) // Only check if Username is provided
+    {
+        throw new ArgumentException("Username must be provided.");
+    }
 
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
-            {
-                await connection.OpenAsync();
-                var command = new SqlCommand(
-                    "INSERT INTO Users (Username, Name, Email) OUTPUT INSERTED.Id VALUES (@Username, @Name, @Email)",
-                    connection
-                );
-                command.Parameters.AddWithValue("@Username", user.Username);
-                command.Parameters.AddWithValue("@Name", user.Name);
-                command.Parameters.AddWithValue("@Email", user.Email);
+    using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+    {
+        await connection.OpenAsync();
+        var command = new SqlCommand(
+            "INSERT INTO Users (Username) OUTPUT INSERTED.Id VALUES (@Username)",
+            connection
+        );
+        command.Parameters.AddWithValue("@Username", user.Username);
 
-                // Insert the user and get the generated Id.
-                user.Id = (int)await command.ExecuteScalarAsync();
-            }
+        // Insert the user and get the generated Id.
+        user.Id = (int)await command.ExecuteScalarAsync();
+    }
 
-            return user; // Return the created user with the generated Id.
-        }
+    return user; // Return the created user with the generated Id.
+}
+
 
         // Get a user by ID
         public async Task<User?> GetUserById(int userId)
@@ -308,8 +313,6 @@ namespace ChessBackend.Services
                         {
                             Id = (int)reader["Id"],
                             Username = (string)reader["Username"],
-                            Name = (string)reader["Name"],
-                            Email = (string)reader["Email"]
                         };
                     }
                 }

@@ -1,14 +1,15 @@
 /* Chessboard container */
 .chessboard {
   display: grid;
-  grid-template-columns: repeat(8, 12vw); /* 8 columns for chessboard */
-  grid-template-rows: repeat(8, 12vw);    /* 8 rows for chessboard */
+  grid-template-columns: repeat(8, 12vw); 
+  grid-template-rows: repeat(8, 12vw);    
   gap: 0;
-  border: 5px solid #333;                 /* Dark border around the chessboard */
-  border-radius: 12px;                    /* Rounded corners */
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4); /* Subtle shadow for depth */
-  background: linear-gradient(135deg, #f3f3f3 25%, #ddd 75%); /* Gradient background */
+  border: 5px solid #333;                 
+  border-radius: 12px;                   
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); 
+  background: linear-gradient(135deg, #f7f7f7 25%, #ddd 75%); 
   margin: 20px auto;
+  max-width: 96vw; 
 }
 
 /* Square styling */
@@ -18,130 +19,147 @@
   align-items: center;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth hover transition */
-  width: 100%;  /* Fill the grid cell */
-  height: 100%; /* Fill the grid cell */
   position: relative; /* For absolute positioning of icons */
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* Light and dark squares */
 .square.light {
-  background-color: #f3f3f3; /* Light squares */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); /* Soft shadow effect */
+  background-color: #f5f5f5; /* Soft light square color */
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle inset shadow */
 }
 
 .square.dark {
-  background-color: #4466c5; /* Dark squares */
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15); /* Contrast shadow */
+  background-color: #354c8c; /* Modern dark square color */
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); /* Enhanced contrast shadow */
 }
 
 /* Hover effect on squares */
 .square:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Subtle hover highlight */
-  transform: scale(1.1); /* Slight zoom-in effect on hover */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Shadow for hover */
+  background-color: rgba(0, 0, 0, 0.1); /* Subtle highlight */
+  transform: scale(1.05); /* Slight zoom effect */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Depth effect */
 }
 
 /* Highlight selected square */
 .square.selected {
-  border: 3px solid rgba(0, 255, 255, 0.8); /* Bright border */
-  background-color: rgba(0, 255, 255, 0.2); /* Semi-transparent highlight */
-  transform: scale(1.05); /* Zoom effect */
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); /* Glow effect */
-}
-
-/* Piece styling */
-.piece {
-  font-size: 3em; /* Large font for clarity */
-  color: black;
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease; /* Smooth movement */
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border: 3px solid rgba(255, 255, 0, 0.8); /* Bright yellow border */
+  background-color: rgba(255, 255, 0, 0.2); /* Semi-transparent highlight */
+  transform: scale(1.1); /* Slight zoom for emphasis */
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); /* Glow effect */
 }
 
 /* Image pieces inside squares */
 .square img {
-  width: 70%; /* Resize images */
+  width: 70%;
   height: 70%;
-  margin: auto; /* Center */
-  object-fit: contain;
+  object-fit: contain; /* Ensure images maintain aspect ratio */
   pointer-events: none; /* Disable interaction */
-  transition: transform 0.3s ease; /* Movement transition */
+  transition: transform 0.3s ease; /* Smooth movement transition */
 }
 
-/* Controls section for buttons */
+/* Controls container */
 .controls {
   text-align: center;
   margin-top: 40px;
-  font-family: 'Arial', sans-serif;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  font-family: 'Arial', sans-serif;
 }
 
+/* Buttons */
 button {
   padding: 12px 24px;
   font-size: 18px;
-  cursor: pointer;
-  background-color: #3498db; /* Blue color */
+  font-weight: bold;
+  background-color: #4caf50; /* Green button */
   color: white;
-  border: 2px solid #2980b9; /* Darker blue border */
+  border: none;
   border-radius: 8px;
-  margin-top: 10px;
+  cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle depth */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
-/* Hover effect for buttons */
 button:hover {
-  background-color: #2980b9; /* Darker hover */
+  background-color: #45a049; /* Darker hover */
   transform: translateY(-2px); /* Lift effect */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Elevated shadow */
 }
 
-/* Disabled state for buttons */
 button:disabled {
-  background-color: #ddd; /* Light gray */
-  color: #aaa; /* Faded text */
+  background-color: #ccc; /* Disabled state */
+  color: #666;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Error message display */
+/* Error message */
 .error-message {
-  color: #ff4d4d; /* Red for errors */
+  color: #e74c3c; /* Bright red */
   margin-top: 10px;
   font-size: 16px;
   font-weight: bold;
 }
 
-/* Replay button styling */
-.replay-button {
+/* Replay controls */
+.replay-controls {
   margin-top: 20px;
   text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.replay-button button {
-  background-color: #3498db;
-  font-size: 18px;
-  color: white;
-  border: 2px solid #2980b9;
+.replay-controls button {
+  background-color: #3498db; /* Blue color for replay */
+  border: none;
   border-radius: 8px;
   padding: 12px 24px;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  font-size: 18px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.replay-button button:hover {
-  background-color: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.replay-controls button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
 }
 
-.replay-button button:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
+/* Game selector */
+.game-selector {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.game-selector select {
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  transition: border-color 0.3s ease;
+}
+
+.game-selector select:focus {
+  outline: none;
+  border-color: #3498db; /* Highlight on focus */
+}
+
+/* User input styling */
+.user-controls input {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.user-controls input:focus {
+  border-color: #4caf50; /* Green outline on focus */
+  outline: none;
+}
+
+.user-controls button {
+  margin-left: 10px;
 }

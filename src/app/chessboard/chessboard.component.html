@@ -8,14 +8,15 @@
         selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : ''
       ]"
       (click)="onSquareClick(rowIndex, colIndex)"
-      [attr.aria-label]="'Chess square ' + getSquareFromIndices(rowIndex, colIndex)">
-      
+      [attr.aria-label]="'Chess square ' + getSquareFromIndices(rowIndex, colIndex)"
+    >
       <!-- Display the piece as an image if the cell is not empty -->
       <img
         *ngIf="cell"
         [src]="getPieceImage(cell)"
         [alt]="cell | uppercase"
-        class="chess-piece" />
+        class="chess-piece"
+      />
     </div>
   </div>
 </div>
@@ -40,8 +41,10 @@
     id="gameSelect"
     [(ngModel)]="gameId"
     (change)="loadGameState()"
-    [disabled]="!games.length">
-    <option *ngFor="let game of games" [value]="game.id">
+    [disabled]="!games || games.length === 0"
+  >
+    <!-- Ensure games is always treated as an array -->
+    <option *ngFor="let game of games || []" [value]="game.id">
       Game #{{ game.id }} ({{ game.dateCreated | date: 'short' }})
     </option>
   </select>
@@ -59,8 +62,8 @@
     type="text"
     id="username"
     [(ngModel)]="username"
-    placeholder="Enter your username" />
-
+    placeholder="Enter your username"
+  />
   <button (click)="createUser()">Create User</button>
   <button *ngIf="currentUser" (click)="logout()">Logout</button>
 </div>
