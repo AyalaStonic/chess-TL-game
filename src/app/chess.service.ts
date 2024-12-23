@@ -26,7 +26,7 @@ export class ChessService {
   }
 
   getGamesByUserId(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`http://localhost:5000/api/chess/user/${userId}`);
+    return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
   }
 
   // Create a new game
@@ -54,20 +54,23 @@ export class ChessService {
     return this.http.put(`${this.apiUrl}/update`, game);
   }
 
-  // Make a move in the game
-  movePiece(gameId: number, move: { from: string, to: string }): Observable<any> {
+  makeMove(gameId: number, from: string, to: string): Observable<any> {
     const body = {
-      gameId: gameId,  // Sending gameId as part of the body
-      move: move       // Move should be sent as an object with 'from' and 'to' properties
+      gameId: gameId,           // Sending gameId as part of the body
+      moveData: {               // Wrap the move in moveData
+        from: from,             // Move from square
+        to: to                  // Move to square
+      }
     };
-
+  
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',  // Ensure the request is sent as JSON
     });
-
+  
     return this.http.post(`${this.apiUrl}/move`, body, { headers });  // Sending the body with move data
   }
-
+  
+  
   // Get all moves for a specific game
   getMoves(gameId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/moves/${gameId}`);

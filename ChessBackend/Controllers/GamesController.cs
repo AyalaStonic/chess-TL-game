@@ -85,33 +85,43 @@ namespace ChessBackend.Controllers
 
         // POST: api/chess/move
         [HttpPost("move")]
-        public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] ChessBackend.Models.Move move)
+public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] ChessBackend.Models.Move move)
+{
+    try
+    {
+        // Fetch the game by its ID
+        var game = await _chessService.GetGameById(gameId);
+
+        if (game == null)
         {
-            try
-            {
-                var game = await _chessService.GetGameById(gameId);
-
-                if (game == null)
-                {
-                    return NotFound(new { message = "Game not found." });
-                }
-
-                var isValidMove = await _chessService.ValidateMove(gameId, move);
-
-                if (!isValidMove)
-                {
-                    return BadRequest(new { message = "Invalid move." });
-                }
-
-                await _chessService.AddMove(gameId, move);
-
-                return Ok(new { message = "Move added successfully", game });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while making the move.", error = ex.Message });
-            }
+            return NotFound(new { message = "Game not found." });
         }
+
+        // Validate the move (ensure moveData exists and is valid)
+        if (move.MoveData == null || string.IsNullOrEmpty(move.MoveData.From) || string.IsNullOrEmpty(move.MoveData.To))
+        {
+            return BadRequest(new { message = "Invalid move data. 'from' and 'to' must be provided." });
+        }
+
+        var isValidMove = await _chessService.ValidateMove(gameId, move);
+
+        if (!isValidMove)
+        {
+            return BadRequest(new { message = "Invalid move." });
+        }
+
+        // Add the move to the game (this method should handle the logic for adding the move)
+        await _chessService.AddMove(gameId, move);
+
+        return Ok(new { message = "Move added successfully", game });
+    }
+    catch (Exception ex)
+    {
+        // Return an error if something goes wrong
+        return StatusCode(500, new { message = "An error occurred while making the move.", error = ex.Message });
+    }
+}
+
 
         // POST: api/chess/games
         [HttpPost("games")]

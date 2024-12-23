@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace ChessBackend.Services
 {
@@ -90,48 +91,60 @@ namespace ChessBackend.Services
         }
 
         // Add a move to a specific game
-        public async Task AddMove(int gameId, Move move)
-        {
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
-            {
-                await connection.OpenAsync();
-                var command = new SqlCommand(
-                    "INSERT INTO Moves (GameId, Move, MoveOrder) VALUES (@GameId, @Move, (SELECT COUNT(*) + 1 FROM Moves WHERE GameId = @GameId))",
-                    connection
-                );
-                command.Parameters.AddWithValue("@GameId", gameId);
-                command.Parameters.AddWithValue("@Move", move.MoveData);
+public async Task AddMove(int gameId, Move move)
+{
+    using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+    {
+        await connection.OpenAsync();
 
-                await command.ExecuteNonQueryAsync();
-            }
-        }
+        // Serialize MoveData object to a JSON string (assuming MoveData is a class)
+        var moveDataJson = JsonSerializer.Serialize(move.MoveData); // Serialize MoveData to JSON string
+
+        var command = new SqlCommand(
+            "INSERT INTO Moves (GameId, Move, MoveOrder) VALUES (@GameId, @Move, (SELECT COUNT(*) + 1 FROM Moves WHERE GameId = @GameId))",
+            connection
+        );
+
+        // Add parameters to the SQL command
+        command.Parameters.AddWithValue("@GameId", gameId);
+        command.Parameters.AddWithValue("@Move", moveDataJson);  // Store the serialized JSON of MoveData
+
+        await command.ExecuteNonQueryAsync();
+    }
+}
+
 
         // Get all moves for a specific game
-        public async Task<List<Move>> GetMovesForGame(int gameId)
-        {
-            var moves = new List<Move>();
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
-            {
-                await connection.OpenAsync();
-                var command = new SqlCommand("SELECT * FROM Moves WHERE GameId = @GameId ORDER BY MoveOrder", connection);
-                command.Parameters.AddWithValue("@GameId", gameId);
+public async Task<List<Move>> GetMovesForGame(int gameId)
+{
+    var moves = new List<Move>();
+    using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
+    {
+        await connection.OpenAsync();
+        var command = new SqlCommand("SELECT * FROM Moves WHERE GameId = @GameId ORDER BY MoveOrder", connection);
+        command.Parameters.AddWithValue("@GameId", gameId);
 
-                using (var reader = await command.ExecuteReaderAsync())
+        using (var reader = await command.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                // Deserialize the MoveData (JSON string) back into a MoveData object
+                var moveDataJson = (string)reader["Move"];
+                var moveData = JsonSerializer.Deserialize<MoveData>(moveDataJson);  // Deserialize the JSON string back to MoveData
+
+                moves.Add(new Move
                 {
-                    while (await reader.ReadAsync())
-                    {
-                        moves.Add(new Move
-                        {
-                            Id = (int)reader["Id"],
-                            GameId = (int)reader["GameId"],
-                            MoveData = (string)reader["Move"],
-                            MoveOrder = (int)reader["MoveOrder"]
-                        });
-                    }
-                }
+                    Id = (int)reader["Id"],
+                    GameId = (int)reader["GameId"],
+                    MoveData = moveData,  // Set MoveData (deserialized object)
+                    MoveOrder = (int)reader["MoveOrder"]
+                });
             }
-            return moves;
         }
+    }
+    return moves;
+}
+
 
         // Start a new game
         public async Task<Game> StartNewGame(int userId)
@@ -223,7 +236,7 @@ namespace ChessBackend.Services
             {
                 await connection.OpenAsync();
                 var command = new SqlCommand(
-                    "INSERT INTO UsersGames (GameId, UserId) VALUES (@GameId, @UserId)",
+                    "INSERT INTO UsersG (GameId, UserId) VALUES (@GameId, @UserId)",
                     connection
                 );
                 command.Parameters.AddWithValue("@GameId", gameId);

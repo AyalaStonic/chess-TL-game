@@ -64,34 +64,32 @@ export class ChessboardComponent implements OnInit {
     }
   }
 
-// Fetch all games from the backend for the current user
-loadGames() {
-  if (this.currentUser) {
-    this.chessService.getGamesByUserId(this.currentUser.id).subscribe(
-      (games: any[] | null | undefined) => {
-        // Ensure games is an array
-        this.games = Array.isArray(games) ? games : [];
-        if (this.games.length > 0) {
-          this.currentGame = this.games[0];
-          this.gameId = this.currentGame.id;
-          this.loadGameState();
-        } else {
-          this.currentGame = null;
-          this.gameId = null;
+  // Fetch all games from the backend for the current user
+  loadGames() {
+    if (this.currentUser) {
+      this.chessService.getGamesByUserId(this.currentUser.id).subscribe(
+        (games: any[] | null | undefined) => {
+          // Ensure games is an array
+          this.games = Array.isArray(games) ? games : [];
+          if (this.games.length > 0) {
+            this.currentGame = this.games[0];
+            this.gameId = this.currentGame.id;
+            this.loadGameState();
+          } else {
+            this.currentGame = null;
+            this.gameId = null;
+          }
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error fetching games:', error);
+          this.games = []; // Reset games in case of error
         }
-      },
-      (error: HttpErrorResponse) => {
-        console.error('Error fetching games:', error);
-        this.games = []; // Reset games in case of error
-      }
-    );
-  } else {
-    this.games = []; // Ensure games is reset when no user is logged in
-    console.warn('No current user found. Cannot load games.');
+      );
+    } else {
+      this.games = []; // Ensure games is reset when no user is logged in
+      console.warn('No current user found. Cannot load games.');
+    }
   }
-}
-
-
 
   // Load the current game's state from the backend
   loadGameState() {
@@ -149,42 +147,44 @@ loadGames() {
       console.error('Game ID is null. Cannot make a move.');
       return;
     }
-
-    const move = { from, to };
-
-    this.chessService.movePiece(this.gameId, move).subscribe(
+  
+    // Call the chess service with the gameId, and the 'from' and 'to' values
+    this.chessService.makeMove(this.gameId, from, to).subscribe(
       (response: any) => {
-        this.invalidMoveMessage = null;
-        this.loadGameState();
+        this.invalidMoveMessage = null;  // Clear any previous invalid move messages
+        this.loadGameState();  // Reload the game state after the move
       },
       (error: HttpErrorResponse) => {
-        this.invalidMoveMessage = 'Invalid move!';
+        this.invalidMoveMessage = 'Invalid move!';  // Set an error message for invalid moves
         console.error('Error making move:', error);
       }
     );
   }
+  
+  
+  
 
-// Start a new game
-startNewGame() {
-  if (this.currentUser) {
-    this.chessService.startNewGame(this.currentUser.id).subscribe(
-      (newGame: any) => {
-        this.initializeBoardState();
-        this.selectedSquare = null;
-        this.invalidMoveMessage = null;
-        this.currentGame = newGame;
-        this.gameId = newGame.id;
-      },
-      (error: HttpErrorResponse) => {
-        console.error('Error starting new game:', error);
-        alert('Failed to start a new game. Please try again.');
-      }
-    );
-  } else {
-    alert('Please log in to start a new game.');
+
+  // Start a new game
+  startNewGame() {
+    if (this.currentUser) {
+      this.chessService.startNewGame(this.currentUser.id).subscribe(
+        (newGame: any) => {
+          this.initializeBoardState();
+          this.selectedSquare = null;
+          this.invalidMoveMessage = null;
+          this.currentGame = newGame;
+          this.gameId = newGame.id;
+        },
+        (error: HttpErrorResponse) => {
+          console.error('Error starting new game:', error);
+          alert('Failed to start a new game. Please try again.');
+        }
+      );
+    } else {
+      alert('Please log in to start a new game.');
+    }
   }
-}
-
 
   // Reset the current game
   resetGame() {
