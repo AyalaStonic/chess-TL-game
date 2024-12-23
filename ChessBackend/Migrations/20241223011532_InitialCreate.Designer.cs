@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChessBackend.Migrations
 {
     [DbContext(typeof(ChessDbContext))]
-    [Migration("20241222180853_InitialCreate")]
+    [Migration("20241223011532_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -53,7 +53,14 @@ namespace ChessBackend.Migrations
                     b.Property<int?>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Games");
                 });
@@ -76,6 +83,9 @@ namespace ChessBackend.Migrations
                     b.Property<int>("MoveOrder")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("PlayedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
@@ -83,18 +93,57 @@ namespace ChessBackend.Migrations
                     b.ToTable("Moves");
                 });
 
+            modelBuilder.Entity("ChessBackend.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ChessBackend.Models.Game", b =>
+                {
+                    b.HasOne("ChessBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ChessBackend.Models.User", null)
+                        .WithMany("Games")
+                        .HasForeignKey("UserId1");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ChessBackend.Models.Move", b =>
                 {
-                    b.HasOne("ChessBackend.Models.Game", null)
+                    b.HasOne("ChessBackend.Models.Game", "Game")
                         .WithMany("Moves")
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Game");
                 });
 
             modelBuilder.Entity("ChessBackend.Models.Game", b =>
                 {
                     b.Navigation("Moves");
+                });
+
+            modelBuilder.Entity("ChessBackend.Models.User", b =>
+                {
+                    b.Navigation("Games");
                 });
 #pragma warning restore 612, 618
         }

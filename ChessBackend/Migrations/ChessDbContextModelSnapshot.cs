@@ -73,9 +73,6 @@ namespace ChessBackend.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<int>("GameId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("MoveData")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -90,8 +87,6 @@ namespace ChessBackend.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("GameId1");
-
                     b.ToTable("Moves");
                 });
 
@@ -102,14 +97,6 @@ namespace ChessBackend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -123,12 +110,12 @@ namespace ChessBackend.Migrations
 
             modelBuilder.Entity("ChessBackend.Models.Game", b =>
                 {
-                    b.HasOne("ChessBackend.Models.User", null)
+                    b.HasOne("ChessBackend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("ChessBackend.Models.User", "User")
+                    b.HasOne("ChessBackend.Models.User", null)
                         .WithMany("Games")
                         .HasForeignKey("UserId1");
 
@@ -137,15 +124,9 @@ namespace ChessBackend.Migrations
 
             modelBuilder.Entity("ChessBackend.Models.Move", b =>
                 {
-                    b.HasOne("ChessBackend.Models.Game", null)
+                    b.HasOne("ChessBackend.Models.Game", "Game")
                         .WithMany("Moves")
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ChessBackend.Models.Game", "Game")
-                        .WithMany()
-                        .HasForeignKey("GameId1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

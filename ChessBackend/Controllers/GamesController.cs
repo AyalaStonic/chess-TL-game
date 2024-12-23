@@ -133,20 +133,25 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST: api/chess/start
-        [HttpPost("start")]
-        public async Task<IActionResult> StartNewGame([FromQuery] int userId)
-        {
-            try
-            {
-                var newGame = await _chessService.StartNewGame(userId);
-                return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
-            }
-        }
+        // POST: api/chess/start/{userId}
+[HttpPost("start/{userId}")]
+public async Task<IActionResult> StartNewGame(int userId)
+{
+    try
+    {
+        // Start the game using the userId
+        var newGame = await _chessService.StartNewGame(userId);
+
+        // Return the newly created game, using CreatedAtAction to return the location of the new resource
+        return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
+    }
+    catch (Exception ex)
+    {
+        // Return a 500 status with error message in case of failure
+        return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
+    }
+}
+
 
         // POST: api/chess/reset/{gameId}
         [HttpPost("reset/{gameId}")]

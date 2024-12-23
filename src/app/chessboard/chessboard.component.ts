@@ -164,23 +164,27 @@ loadGames() {
     );
   }
 
-  // Start a new game
-  startNewGame() {
-    if (this.currentUser) {
-      this.chessService.startNewGame(this.currentUser.id).subscribe(
-        (newGame: any) => {
-          this.initializeBoardState();
-          this.selectedSquare = null;
-          this.invalidMoveMessage = null;
-          this.currentGame = newGame;
-          this.gameId = newGame.id;
-        },
-        (error: HttpErrorResponse) => {
-          console.error('Error starting new game:', error);
-        }
-      );
-    }
+// Start a new game
+startNewGame() {
+  if (this.currentUser) {
+    this.chessService.startNewGame(this.currentUser.id).subscribe(
+      (newGame: any) => {
+        this.initializeBoardState();
+        this.selectedSquare = null;
+        this.invalidMoveMessage = null;
+        this.currentGame = newGame;
+        this.gameId = newGame.id;
+      },
+      (error: HttpErrorResponse) => {
+        console.error('Error starting new game:', error);
+        alert('Failed to start a new game. Please try again.');
+      }
+    );
+  } else {
+    alert('Please log in to start a new game.');
   }
+}
+
 
   // Reset the current game
   resetGame() {
