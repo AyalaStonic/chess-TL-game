@@ -268,29 +268,46 @@ public async Task<IActionResult> StartNewGame(int userId)
             }
         }
 
-        // POST: api/chess/user/login
-        [HttpPost("user/login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+   // POST: api/chess/user/login
+[HttpPost("user/login")]
+public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+{
+    // Validate the request
+    if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Username))
+    {
+        return BadRequest(new { message = "Invalid login request. Username is required." });
+    }
+
+    try
+    {
+        // Attempt to fetch the user by username
+        var user = await _chessService.GetUserByUsername(loginRequest.Username);
+        if (user == null)
         {
-            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Username))
-            {
-                return BadRequest(new { message = "Invalid login request. Username is required." });
-            }
-
-            try
-            {
-                var user = await _chessService.GetUserByUsername(loginRequest.Username);
-                if (user == null)
-                {
-                    return Unauthorized(new { message = "User not found." });
-                }
-
-                return Ok(new { message = "Login successful.", user });
-            }
-            catch (Exception ex)
-            {
-                // Log the error and return a server error
-                return StatusCode(500, new { message = "An error occurred while processing the login request.", error = ex.Message });
-            }
+            return NotFound(new { message = "User not found." });
         }
-    }}
+
+        // Return user details (id and username) for successful login
+        return Ok(new
+        {
+            message = "Login successful.",
+            user = new
+            {
+                id = user.Id,
+                username = user.Username
+            }
+        });
+    }
+    catch (Exception ex)
+    {
+        // Log the exception (optional: use a logging service here)
+        Console.Error.WriteLine($"Error during login: {ex.Message}");
+
+        // Return a generic server error response
+        return StatusCode(500, new
+        {
+            message = "An error occurred while processing the login request.",
+            error = ex.Message
+        });
+    }
+}}}

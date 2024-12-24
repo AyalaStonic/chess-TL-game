@@ -68,32 +68,42 @@ export class ChessboardComponent implements OnInit {
   }
 
   loginUser(): void {
-    if (!this.username.trim()) {
+    if (!this.username || this.username.trim().length === 0) {
       alert('Please enter a valid username.');
       return;
     }
-
+  
     const user = { username: this.username.trim() };
+  
     this.chessService.loginUser(user).subscribe(
-      (existingUser) => {
-        this.currentUser = existingUser;
-        alert(`Welcome back, ${existingUser.username}!`);
-        this.loadGames();
+      (response: any) => {
+        if (response.user && response.user.id) {
+          this.currentUser = response.user; // Set the logged-in user
+          console.log('User logged in successfully:', this.currentUser);
+          alert(`Welcome back, ${this.currentUser.username}!`);
+          this.loadGames(); // Load games associated with the user
+        } else {
+          console.error('Login response did not contain a valid user ID.');
+          alert('Login failed. Invalid user data received.');
+        }
       },
       (error: HttpErrorResponse) => {
+        console.error('Error logging in:', error);
         if (error.status === 404) {
-          alert('User not found. Please create a new account.');
+          alert('User not found. Please check the username or create a new account.');
         } else {
           alert('Failed to log in. Please try again.');
         }
       }
     );
   }
+  
+  
 
-  loadGames() {
-    if (this.currentUser) {
+  loadGames(): void {
+    if (this.currentUser && this.currentUser.id) {
       this.chessService.getGamesByUserId(this.currentUser.id).subscribe(
-        (games) => {
+        (games: any[] | null | undefined) => {
           this.games = Array.isArray(games) ? games : [];
           if (this.games.length > 0) {
             this.currentGame = this.games[0];
@@ -106,11 +116,15 @@ export class ChessboardComponent implements OnInit {
         },
         (error: HttpErrorResponse) => {
           console.error('Error fetching games:', error);
-          this.games = [];
+          this.games = []; // Reset games in case of error
         }
       );
+    } else {
+      this.games = [];
+      console.warn('No current user found. Cannot load games.');
     }
   }
+  
 
   loadGameState() {
     if (this.gameId !== null) {
