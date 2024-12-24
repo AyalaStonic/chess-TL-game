@@ -143,24 +143,39 @@ public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] Che
             }
         }
 
-        // POST: api/chess/start/{userId}
+    
+/// POST: api/chess/start/{userId}
 [HttpPost("start/{userId}")]
 public async Task<IActionResult> StartNewGame(int userId)
 {
     try
     {
+        // Validate the user exists before starting a new game
+        var userExists = await _chessService.UserExists(userId);
+        if (!userExists)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
         // Start the game using the userId
         var newGame = await _chessService.StartNewGame(userId);
 
         // Return the newly created game, using CreatedAtAction to return the location of the new resource
         return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
     }
+    catch (ArgumentException ex)
+    {
+        // Handle specific exceptions such as invalid arguments
+        return BadRequest(new { message = "Invalid request.", error = ex.Message });
+    }
     catch (Exception ex)
     {
-        // Return a 500 status with error message in case of failure
+        // Log and return a 500 status with error message in case of unexpected failures
         return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
     }
 }
+
+
 
 
         // POST: api/chess/reset/{gameId}
@@ -202,34 +217,43 @@ public async Task<IActionResult> StartNewGame(int userId)
             }
         }
 
-        // POST: api/chess/user
-        [HttpPost("user")]
+       [HttpPost("user")]
         public async Task<IActionResult> AddUser([FromBody] User user)
         {
-            if (user == null)
+            if (user == null || string.IsNullOrWhiteSpace(user.Username))
             {
-                return BadRequest(new { message = "Invalid user data." });
+                return BadRequest(new { message = "Invalid user data. Username is required." });
             }
 
             try
             {
+                // Ensure the username is unique
+                var usernameExists = await _chessService.UsernameExists(user.Username);
+                if (usernameExists)
+                {
+                    return Conflict(new { message = "Username already exists." });
+                }
+
+                // Add the user
                 var createdUser = await _chessService.AddUser(user);
+
+                // Return the created user resource
                 return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
             }
             catch (Exception ex)
             {
+                // Log the error and return a server error
                 return StatusCode(500, new { message = "An error occurred while adding the user.", error = ex.Message });
             }
         }
 
         // GET: api/chess/user/{id}
-         [HttpGet("user/{id}")]
+        [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
             try
             {
                 var user = await _chessService.GetUserById(id);
-
                 if (user == null)
                 {
                     return NotFound(new { message = "User not found." });
@@ -239,29 +263,34 @@ public async Task<IActionResult> StartNewGame(int userId)
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching the user.", error = ex.Message });
+                // Log the error and return a server error
+                return StatusCode(500, new { message = "An error occurred while retrieving the user.", error = ex.Message });
             }
         }
 
-        // GET: api/chess/games/user/{userId}
-         [HttpGet("games/user/{userId}")]
-        public async Task<IActionResult> GetUserGames(int userId)
+        // POST: api/chess/user/login
+        [HttpPost("user/login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
+            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Username))
+            {
+                return BadRequest(new { message = "Invalid login request. Username is required." });
+            }
+
             try
             {
-                var games = await _chessService.GetGamesByUserId(userId);
-
-                if (games == null || !games.Any())
+                var user = await _chessService.GetUserByUsername(loginRequest.Username);
+                if (user == null)
                 {
-                    return NotFound(new { message = "No games found for this user." });
+                    return Unauthorized(new { message = "User not found." });
                 }
 
-                return Ok(games);
+                return Ok(new { message = "Login successful.", user });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching games for the user.", error = ex.Message });
+                // Log the error and return a server error
+                return StatusCode(500, new { message = "An error occurred while processing the login request.", error = ex.Message });
             }
         }
-    }
-}
+    }}

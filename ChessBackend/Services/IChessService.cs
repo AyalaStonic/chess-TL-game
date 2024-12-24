@@ -47,5 +47,14 @@ namespace ChessBackend.Services
 
         // Get a user by ID
         Task<User?> GetUserById(int userId);
+
+        // Check if a user exists by ID
+        Task<bool> UserExists(int userId);
+
+        // Check if a username exists
+        Task<bool> UsernameExists(string username);
+
+        // Get a user by their username
+        Task<User?> GetUserByUsername(string username);
     }
 }

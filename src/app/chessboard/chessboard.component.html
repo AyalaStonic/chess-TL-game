@@ -1,4 +1,5 @@
 <div class="chessboard">
+  <!-- Render the chessboard -->
   <div *ngFor="let row of boardState; let rowIndex = index" class="row">
     <div
       *ngFor="let cell of row; let colIndex = index"
@@ -21,14 +22,14 @@
   </div>
 </div>
 
-<!-- Controls for Game Management -->
+<!-- Game Management Controls -->
 <div class="controls">
   <button (click)="startNewGame()">Start New Game</button>
   <button [disabled]="!currentGame" (click)="resetGame()">Reset Game</button>
   <button (click)="loadGames()">Load Games</button>
   <button [disabled]="!currentGame" (click)="saveGame()">Save Game</button>
 
-  <!-- Display an error message if a move is invalid -->
+  <!-- Error Message for Invalid Moves -->
   <div *ngIf="invalidMoveMessage" class="error-message">
     {{ invalidMoveMessage }}
   </div>
@@ -43,7 +44,7 @@
     (change)="loadGameState()"
     [disabled]="!games || games.length === 0"
   >
-    <!-- Ensure games is always treated as an array -->
+    <!-- Use `games || []` to avoid errors when games is null -->
     <option *ngFor="let game of games || []" [value]="game.id">
       Game #{{ game.id }} ({{ game.dateCreated | date: 'short' }})
     </option>
@@ -65,5 +66,6 @@
     placeholder="Enter your username"
   />
   <button (click)="createUser()">Create User</button>
+  <button (click)="loginUser()">Log In</button>
   <button *ngIf="currentUser" (click)="logout()">Logout</button>
 </div>

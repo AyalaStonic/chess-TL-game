@@ -18,7 +18,11 @@ export class ChessService {
 
   createUser(user: { username: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/user`, user);
-  }
+}
+
+  loginUser(user: { username: string }): Observable<any> {
+     return this.http.post(`${this.apiUrl}/user/login`, user);
+}
   
   // Get game by ID
   getGameById(gameId: number): Observable<any> {
@@ -56,19 +60,14 @@ export class ChessService {
 
   makeMove(gameId: number, from: string, to: string): Observable<any> {
     const body = {
-      gameId: gameId,           // Sending gameId as part of the body
-      moveData: {               // Wrap the move in moveData
-        from: from,             // Move from square
-        to: to                  // Move to square
-      }
+      gameId: gameId,
+      from: from,
+      to: to
     };
   
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',  // Ensure the request is sent as JSON
-    });
-  
-    return this.http.post(`${this.apiUrl}/move`, body, { headers });  // Sending the body with move data
+    return this.http.post(`${this.apiUrl}/move`, body);
   }
+  
   
   
   // Get all moves for a specific game
