@@ -94,54 +94,42 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
 {
     try
     {
-        // Validate the incoming data
+        // Step 1: Validate the incoming data
         if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
         {
             return BadRequest("Invalid move data.");
         }
 
-        // Fetch the game from the database
+        // Step 2: Fetch the game from the database
         var game = _context.Games.Find(moveData.GameId);
         if (game == null)
         {
             return NotFound("Game not found.");
         }
 
-        // Log the FEN string for debugging purposes
-        Console.WriteLine("Before Move - FEN: " + game.Fen);  // Log the FEN string before move
-
-        // Validate FEN format: It should have 8 ranks separated by "/"
-        if (!IsValidFen(game.Fen))
-        {
-            return BadRequest("Invalid FEN format.");
-        }
-
-        // Load the current game state using ChessDotNet.ChessGame
+        // Step 4: Initialize ChessDotNet game with FEN
         var chessGame = new ChessDotNet.ChessGame(game.Fen);
 
-        // Convert 'From' and 'To' to ChessDotNet.Position
+        // Step 5: Convert 'From' and 'To' to ChessDotNet.Position
         var fromPosition = new ChessDotNet.Position(moveData.From);
         var toPosition = new ChessDotNet.Position(moveData.To);
 
-        // Create the move using ChessDotNet.Move
+        // Step 6: Create the move using ChessDotNet.Move
         var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
 
-        // Use MakeMove to validate and apply the move
-        ChessDotNet.MoveType moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
-
-        // Check if the move was successfully applied
+        // Step 7: Validate and apply the move
+        var moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
         if (moveResult == ChessDotNet.MoveType.Invalid)
         {
+            Console.WriteLine("Move rejected by ChessDotNet.");
             return BadRequest("Invalid move.");
         }
 
-        // Log the FEN string after the move is applied
-        Console.WriteLine("After Move - FEN: " + chessGame.GetFen());  // Log the updated FEN after the move
-
-        // Update the game's FEN string
+        // Step 8: Update the FEN string after the move
         game.Fen = chessGame.GetFen();
+        Console.WriteLine("After Move - FEN: " + game.Fen);
 
-        // Create a new database move data record
+        // Step 9: Create and save a new MoveData entry
         var moveDataEntry = new MoveData
         {
             GameId = moveData.GameId,
@@ -149,66 +137,72 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
             To = moveData.To
         };
 
-        // Save MoveData to the database first
-        _context.MoveData.Add(moveDataEntry);  // Save the MoveData entry
-        _context.SaveChanges();  // Ensure MoveData gets an Id assigned
+        _context.MoveData.Add(moveDataEntry);
+        _context.SaveChanges();
 
-        // Create a new Move record that references the MoveData
+        // Step 10: Create and save a new Move entry
         var moveEntry = new ChessBackend.Models.Move
         {
             GameId = moveData.GameId,
-            MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order for the game
+            MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order
             MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
-            PlayedAt = DateTime.UtcNow // Assign the current timestamp
+            PlayedAt = DateTime.UtcNow
         };
 
-        // Save the Move to the database
         _context.Moves.Add(moveEntry);
 
-        // Save the updated game state to the database
+        // Step 11: Save the updated game state to the database
         _context.SaveChanges();
 
-        // Return the updated FEN to the frontend
+        // Step 12: Return the updated FEN to the frontend
         return Ok(new { success = true, fen = game.Fen });
     }
     catch (Exception ex)
     {
-        // Handle errors and log them
+        // Log the error and return a 500 status code
+        Console.WriteLine("Error: " + ex.Message);
         return StatusCode(500, "Internal Server Error: " + ex.Message);
     }
 }
 
-
 // FEN validation method
 private bool IsValidFen(string fen)
 {
-    var ranks = fen.Split('/');
-    if (ranks.Length != 8) return false;  // Must have exactly 8 ranks
-
-    foreach (var rank in ranks)
+    try
     {
-        int rankLength = 0;
-        foreach (char c in rank)
+        var ranks = fen.Split('/');
+        if (ranks.Length != 8) return false;  // Must have exactly 8 ranks
+
+        foreach (var rank in ranks)
         {
-            if (char.IsDigit(c))
+            int rankLength = 0;
+            foreach (char c in rank)
             {
-                rankLength += (int)char.GetNumericValue(c);  // Add the number of empty squares
+                if (char.IsDigit(c))
+                {
+                    rankLength += (int)char.GetNumericValue(c);  // Add the number of empty squares
+                }
+                else if ("rnbqkpRNBQKP".Contains(c))  // Check for valid piece characters
+                {
+                    rankLength++;
+                }
+                else
+                {
+                    return false;  // Invalid character found
+                }
             }
-            else if ("rnbqkRNBQK".Contains(c))  // Check for valid piece
-            {
-                rankLength++;
-            }
-            else
-            {
-                return false;  // Invalid character in FEN string
-            }
+
+            if (rankLength != 8) return false;  // Each rank must have exactly 8 squares
         }
 
-        if (rankLength != 8) return false;  // Each rank must have exactly 8 squares
+        return true;  // FEN is valid
     }
-
-    return true;
+    catch
+    {
+        return false;  // Catch any parsing errors and return invalid
+    }
 }
+
 
 
 

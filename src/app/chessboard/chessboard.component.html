@@ -5,7 +5,7 @@
       *ngFor="let cell of row; let colIndex = index"
       class="square"
       [ngClass]="[
-        getSquareClass(rowIndex, colIndex),
+        getSquareClass(rowIndex, colIndex), 
         selectedSquare === getSquareFromIndices(rowIndex, colIndex) ? 'selected' : ''
       ]"
       (click)="onSquareClick(rowIndex, colIndex)"

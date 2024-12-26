@@ -26,22 +26,16 @@ export class ChessboardComponent implements OnInit {
   constructor(private chessService: ChessService, private http: HttpClient) {}
 
   ngOnInit() {
-    this.initializeBoardState();
-    this.loadGames();
+    this.boardState = this.initializeBoardState();  // Ensure board state is initialized
+    this.loadGames();  // Load games if necessary
   }
 
-  // Initialize the chessboard to its default state
-  initializeBoardState() {
-    this.boardState = [
-      ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-      ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-      ['', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', ''],
-      ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-    ];
+  initializeBoardState(): string[][] {
+    // Define the default FEN
+    const defaultFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+    // Convert the default FEN to a board state
+    return this.convertFENToBoard(defaultFEN);
   }
 
   createUser(): void {
@@ -123,12 +117,22 @@ export class ChessboardComponent implements OnInit {
       this.chessService.getGameById(this.gameId).subscribe(
         (game) => {
           this.currentGame = game;
-          this.boardState = this.convertFENToBoard(game.fen);
+          if (game && game.fen) {
+            // Update the board with the current FEN string
+            this.boardState = this.convertFENToBoard(game.fen);
+          } else {
+            // Fallback if the FEN string is missing
+            console.error('FEN string missing in game data');
+            this.boardState = this.initializeBoardState();  // Fallback to default state
+          }
         },
-        (error: HttpErrorResponse) => {}
+        (error: HttpErrorResponse) => {
+          console.error('Error loading game state:', error);
+        }
       );
     }
   }
+  
 
   replayGame() {
     if (this.currentGame && this.currentGame.moves && Array.isArray(this.currentGame.moves)) {
@@ -149,30 +153,30 @@ export class ChessboardComponent implements OnInit {
   getSquareClass(rowIndex: number, colIndex: number): string {
     const isLightSquare = (rowIndex + colIndex) % 2 === 0;
     return isLightSquare ? 'light' : 'dark';
-  }// Converts the FEN string to a 2D array representing the chessboard
+  }
+
   convertFENToBoard(fen: string): string[][] {
-    // Split FEN string into rows, using '/' as separator
+    if (!fen || typeof fen !== 'string') {
+      console.error('Invalid FEN string:', fen);
+      return this.initializeBoardState();  // Fallback to default board state
+    }
+  
     const rows = fen.split(' ')[0].split('/');
-    
-    // Map each row to a board row
     return rows.map((row) => {
       const boardRow: string[] = [];
-      
-      // Loop through each character in the row
       for (const char of row) {
         if (isNaN(Number(char))) {
-          // If it's a piece (non-numeric), add it to the board row
+          // Add the piece if it's a letter (e.g., 'r', 'K', 'p')
           boardRow.push(char);
         } else {
-          // If it's a number, it represents empty squares
-          for (let i = 0; i < Number(char); i++) {
-            boardRow.push(''); // Add empty squares
-          }
+          // If the character is a number, it represents empty squares
+          boardRow.push(...Array(Number(char)).fill(''));
         }
       }
       return boardRow;
     });
   }
+  
 
   // Handles a click on a square on the chessboard
   onSquareClick(rowIndex: number, colIndex: number) {
@@ -197,10 +201,26 @@ export class ChessboardComponent implements OnInit {
   makeMove(from: string, to: string) {
     if (this.gameId === null) return;
   
+    // Ensure the piece exists on the source square before making the move
+    const piece = this.getPieceFromSquare(from);
+    if (!piece) {
+      this.invalidMoveMessage = 'Source piece does not exist.';
+      console.error('Error: Source piece does not exist.');
+      return;
+    }
+  
+    // Proceed with the move
     this.chessService.makeMove(this.gameId, from, to).subscribe(
       (response) => {
+        // Update the board state after a valid move
         this.invalidMoveMessage = null;
-        this.loadGameState();
+        if (response && response.fen) {
+          // Update the board with the new FEN string returned by the backend
+          this.boardState = this.convertFENToBoard(response.fen);
+        } else {
+          console.error('Invalid response from backend. FEN missing.');
+          this.invalidMoveMessage = 'Error updating game state.';
+        }
       },
       (error) => {
         this.invalidMoveMessage = 'Invalid move!';
@@ -209,7 +229,12 @@ export class ChessboardComponent implements OnInit {
     );
   }
   
-  
+
+  getPieceFromSquare(square: string): string | null {
+    const colIndex = square.charCodeAt(0) - 97; // Convert column (e.g., 'a') to index
+    const rowIndex = 8 - parseInt(square[1], 10); // Convert row (e.g., '1') to index
+    return this.boardState[rowIndex][colIndex];
+  }
 
   startNewGame() {
     if (this.currentUser) {
@@ -257,7 +282,9 @@ export class ChessboardComponent implements OnInit {
       n: 'black_knight',
       p: 'black_pawn',
     };
-    return piece ? `./chess-pieces/${pieceMap[piece]}.png` : '';
+
+    // Check if the piece exists in the map, and return the correct image path or an empty string
+    return piece && pieceMap[piece] ? `/chess-pieces/${pieceMap[piece]}.png` : '';
   }
 
   logout() {
