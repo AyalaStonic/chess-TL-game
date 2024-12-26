@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using ChessDotNet;
+using Microsoft.Extensions.Logging;
 
 namespace ChessBackend.Controllers
 {
@@ -15,12 +16,14 @@ namespace ChessBackend.Controllers
     {
         private readonly IChessService _chessService;
         private readonly ChessDbContext _context;
+        private readonly ILogger<GamesController> _logger;  // Added the logger
 
         // Constructor accepting both dependencies
-        public GamesController(IChessService chessService, ChessDbContext context)
+        public GamesController(IChessService chessService, ChessDbContext context, ILogger<GamesController> logger)
         {
             _chessService = chessService;
             _context = context;
+            _logger = logger;  // Initialize the logger
         }
 
         // GET: api/chess/games
@@ -86,75 +89,84 @@ namespace ChessBackend.Controllers
             }
         }
 
-// POST: api/chess/move
 [HttpPost("move")]
 public IActionResult MakeMove([FromBody] MoveData moveData)
 {
-    // Validate the incoming data
-    if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
+    try
     {
-        return BadRequest("Invalid move data.");
+        // Validate the incoming data
+        if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
+        {
+            return BadRequest("Invalid move data.");
+        }
+
+        // Fetch the game from the database
+        var game = _context.Games.Find(moveData.GameId);
+        if (game == null)
+        {
+            return NotFound("Game not found.");
+        }
+
+        // Load the current game state using ChessDotNet.ChessGame
+        var chessGame = new ChessDotNet.ChessGame(game.Fen);
+
+        // Convert 'From' and 'To' to ChessDotNet.Position
+        var fromPosition = new ChessDotNet.Position(moveData.From);
+        var toPosition = new ChessDotNet.Position(moveData.To);
+
+        // Create the move using ChessDotNet.Move
+        var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
+
+        // Use MakeMove to validate and apply the move
+        ChessDotNet.MoveType moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
+        
+        // Check if the move was successfully applied
+        if (moveResult == ChessDotNet.MoveType.Invalid)
+        {
+            return BadRequest("Invalid move.");
+        }
+
+        // Update the game's FEN string
+        game.Fen = chessGame.GetFen();
+
+        // Create a new database move data record
+        var moveDataEntry = new MoveData
+        {
+            GameId = moveData.GameId,
+            From = moveData.From,
+            To = moveData.To
+        };
+
+        // Save MoveData to the database first
+        _context.MoveData.Add(moveDataEntry);  // Save the MoveData entry
+        _context.SaveChanges();  // Ensure MoveData gets an Id assigned
+
+        // Create a new Move record that references the MoveData
+        var moveEntry = new ChessBackend.Models.Move
+        {
+            GameId = moveData.GameId,
+            MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order for the game
+            MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
+            PlayedAt = DateTime.UtcNow // Assign the current timestamp
+        };
+
+        // Save the Move to the database
+        _context.Moves.Add(moveEntry);
+
+        // Save the updated game state to the database
+        _context.SaveChanges();
+
+        // Return the updated FEN to the frontend
+        return Ok(new { success = true, fen = game.Fen });
     }
-
-    // Fetch the game from the database
-    var game = _context.Games.Find(moveData.GameId);
-    if (game == null)
+    catch (Exception ex)
     {
-        return NotFound("Game not found.");
+        // Log any errors
+        _logger.LogError(ex, "Error in MakeMove.");
+        return StatusCode(500, "Internal Server Error: " + ex.Message);
     }
-
-    // Load the current game state using ChessDotNet.ChessGame
-    var chessGame = new ChessDotNet.ChessGame(game.Fen);
-
-    // Convert 'From' and 'To' to ChessDotNet.Position
-    var fromPosition = new ChessDotNet.Position(moveData.From);
-    var toPosition = new ChessDotNet.Position(moveData.To);
-
-    // Create the move using ChessDotNet.Move
-    var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
-
-    // Use MakeMove to validate and apply the move
-    ChessDotNet.MoveType moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
-    
-    // Check if the move was successfully applied
-    if (moveResult == ChessDotNet.MoveType.Invalid)
-    {
-        return BadRequest("Invalid move.");
-    }
-
-    // Update the game's FEN string
-    game.Fen = chessGame.GetFen();
-
-    // Create a new database move data record
-    var moveDataEntry = new MoveData
-    {
-        GameId = moveData.GameId,
-        From = moveData.From,
-        To = moveData.To
-    };
-
-    // Save MoveData to the database first
-    _context.MoveData.Add(moveDataEntry);  // Save the MoveData entry
-    _context.SaveChanges();  // Ensure MoveData gets an Id assigned
-
-    // Create a new Move record that references the MoveData
-    var moveEntry = new ChessBackend.Models.Move
-    {
-        GameId = moveData.GameId,
-        MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order for the game
-        MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
-        PlayedAt = DateTime.UtcNow // Assign the current timestamp
-    };
-
-    // Save the Move to the database
-    _context.Moves.Add(moveEntry);
-
-    // Save the updated game state to the database
-    _context.SaveChanges();
-
-    // Return the updated FEN to the frontend
-    return Ok(new { success = true, fen = game.Fen });
 }
+
 
 
 

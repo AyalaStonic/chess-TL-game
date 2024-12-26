@@ -76,12 +76,13 @@ namespace ChessBackend.Services
         }
 
 
-       public async Task AddMove(int gameId, ChessBackendMove move)
+      public async Task AddMove(int gameId, ChessBackendMove move)
 {
     using (var connection = new SqlConnection(_configuration.GetConnectionString("ChessDB")))
     {
         await connection.OpenAsync();
 
+        // Insert MoveData into the database
         var insertMoveDataCommand = new SqlCommand(
             "INSERT INTO MoveData ([From], [To]) OUTPUT INSERTED.Id VALUES (@From, @To)",
             connection
@@ -91,6 +92,7 @@ namespace ChessBackend.Services
 
         int moveDataId = (int)await insertMoveDataCommand.ExecuteScalarAsync();
 
+        // Insert the Move entry, linked to MoveData
         var insertMoveCommand = new SqlCommand(
             "INSERT INTO Moves (GameId, MoveDataId, MoveOrder, PlayedAt) " +
             "VALUES (@GameId, @MoveDataId, (SELECT COUNT(*) + 1 FROM Moves WHERE GameId = @GameId), @PlayedAt)",
@@ -103,6 +105,7 @@ namespace ChessBackend.Services
         await insertMoveCommand.ExecuteNonQueryAsync();
     }
 }
+
 
    public async Task<Game> StartNewGame(int userId)
 {
@@ -120,7 +123,7 @@ namespace ChessBackend.Services
         CreatedAt = DateTime.UtcNow,
         UserId = userId,
         // Set the initial Fen string to represent the standard starting chessboard position
-        Fen = "rnbqkbnr/pppppppp/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"  // Standard FEN for the starting position
+       Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"   // Standard FEN for the starting position
     };
 
     // Add the newly created game to the database

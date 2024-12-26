@@ -191,11 +191,13 @@ export class ChessboardComponent implements OnInit {
         this.invalidMoveMessage = null;
         this.loadGameState();
       },
-      () => {
+      (error) => {
         this.invalidMoveMessage = 'Invalid move!';
+        console.error('Error making move:', error);
       }
     );
   }
+  
   
 
   startNewGame() {
