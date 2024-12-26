@@ -21,7 +21,7 @@ namespace ChessBackend.Models
         public DateTime? EndedAt { get; set; }
 
         // The current game state in FEN format (can be used for replay)
-        public string? FEN { get; set; }
+     public string Fen { get; set; }
 
         // Nullable: User ID if the game is linked to a user
         public int? UserId { get; set; }

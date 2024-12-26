@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChessBackend.Migrations
 {
     [DbContext(typeof(ChessDbContext))]
-    [Migration("20241225022059_InitialCreate")]
+    [Migration("20241226001525_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -39,7 +39,8 @@ namespace ChessBackend.Migrations
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("FEN")
+                    b.Property<string>("Fen")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -101,6 +102,9 @@ namespace ChessBackend.Migrations
                     b.Property<string>("From")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
 
                     b.Property<string>("To")
                         .IsRequired()

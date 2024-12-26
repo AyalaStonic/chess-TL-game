@@ -13,7 +13,7 @@ namespace ChessBackend.Models
         // DbSet properties for your entities
         public DbSet<User> Users { get; set; }
         public DbSet<Game> Games { get; set; }
-        public DbSet<Move> Moves { get; set; }
+      public DbSet<Move> Moves { get; set; }
         public DbSet<MoveData> MoveData { get; set; }
 
         // Override OnModelCreating to configure entity relationships

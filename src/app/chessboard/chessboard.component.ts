@@ -72,23 +72,20 @@ export class ChessboardComponent implements OnInit {
       alert('Please enter a valid username.');
       return;
     }
-  
+
     const user = { username: this.username.trim() };
-  
+
     this.chessService.loginUser(user).subscribe(
       (response: any) => {
         if (response.user && response.user.id) {
-          this.currentUser = response.user; // Set the logged-in user
-          console.log('User logged in successfully:', this.currentUser);
+          this.currentUser = response.user;
           alert(`Welcome back, ${this.currentUser.username}!`);
-          this.loadGames(); // Load games associated with the user
+          this.loadGames();
         } else {
-          console.error('Login response did not contain a valid user ID.');
           alert('Login failed. Invalid user data received.');
         }
       },
       (error: HttpErrorResponse) => {
-        console.error('Error logging in:', error);
         if (error.status === 404) {
           alert('User not found. Please check the username or create a new account.');
         } else {
@@ -97,8 +94,6 @@ export class ChessboardComponent implements OnInit {
       }
     );
   }
-  
-  
 
   loadGames(): void {
     if (this.currentUser && this.currentUser.id) {
@@ -115,16 +110,13 @@ export class ChessboardComponent implements OnInit {
           }
         },
         (error: HttpErrorResponse) => {
-          console.error('Error fetching games:', error);
-          this.games = []; // Reset games in case of error
+          this.games = [];
         }
       );
     } else {
       this.games = [];
-      console.warn('No current user found. Cannot load games.');
     }
   }
-  
 
   loadGameState() {
     if (this.gameId !== null) {
@@ -133,39 +125,31 @@ export class ChessboardComponent implements OnInit {
           this.currentGame = game;
           this.boardState = this.convertFENToBoard(game.fen);
         },
-        (error: HttpErrorResponse) => {
-          console.error('Error loading game state:', error);
-        }
+        (error: HttpErrorResponse) => {}
       );
     }
   }
 
-  // Replay the game from the beginning
-replayGame() {
-  if (this.currentGame && this.currentGame.moves && Array.isArray(this.currentGame.moves)) {
-    // Reset the board to the initial state
-    this.initializeBoardState();
-    this.invalidMoveMessage = null;
-    this.selectedSquare = null;
+  replayGame() {
+    if (this.currentGame && this.currentGame.moves && Array.isArray(this.currentGame.moves)) {
+      this.initializeBoardState();
+      this.invalidMoveMessage = null;
+      this.selectedSquare = null;
 
-    // Replay each move sequentially with a delay
-    this.currentGame.moves.forEach((move: any, index: number) => {
-      setTimeout(() => {
-        this.makeMove(move.from, move.to);
-      }, index * 1000); // Adjust delay as needed (e.g., 1 second per move)
-    });
-  } else {
-    console.error('No valid game moves to replay!');
+      this.currentGame.moves.forEach((move: any, index: number) => {
+        setTimeout(() => {
+          this.makeMove(move.from, move.to);
+        }, index * 1000);
+      });
+    } else {
+      alert('No valid game moves to replay!');
+    }
   }
-}
 
-// Get the CSS class for each square based on its position
-getSquareClass(rowIndex: number, colIndex: number): string {
-  const isLightSquare = (rowIndex + colIndex) % 2 === 0;
-  return isLightSquare ? 'light' : 'dark';
-}
-
-
+  getSquareClass(rowIndex: number, colIndex: number): string {
+    const isLightSquare = (rowIndex + colIndex) % 2 === 0;
+    return isLightSquare ? 'light' : 'dark';
+  }
 
   convertFENToBoard(fen: string): string[][] {
     const rows = fen.split(' ')[0].split('/');
@@ -201,9 +185,9 @@ getSquareClass(rowIndex: number, colIndex: number): string {
 
   makeMove(from: string, to: string) {
     if (this.gameId === null) return;
-
+  
     this.chessService.makeMove(this.gameId, from, to).subscribe(
-      () => {
+      (response) => {
         this.invalidMoveMessage = null;
         this.loadGameState();
       },
@@ -212,6 +196,7 @@ getSquareClass(rowIndex: number, colIndex: number): string {
       }
     );
   }
+  
 
   startNewGame() {
     if (this.currentUser) {
@@ -238,7 +223,7 @@ getSquareClass(rowIndex: number, colIndex: number): string {
   saveGame() {
     if (this.currentGame) {
       this.chessService.saveGame(this.currentGame).subscribe(
-        () => console.log('Game saved successfully.'),
+        () => alert('Game saved successfully.'),
         (error) => console.error('Error saving game:', error)
       );
     }

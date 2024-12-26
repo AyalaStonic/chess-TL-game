@@ -59,13 +59,14 @@ export class ChessService {
   }
 
   makeMove(gameId: number, from: string, to: string): Observable<any> {
-    const body = {
+    const moveData = {
       gameId: gameId,
       from: from,
       to: to
     };
   
-    return this.http.post(`${this.apiUrl}/move`, body);
+    // Send the move data to the backend
+    return this.http.post(`${this.apiUrl}/move`, moveData);
   }
   
   

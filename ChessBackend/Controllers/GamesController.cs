@@ -14,10 +14,13 @@ namespace ChessBackend.Controllers
     public class GamesController : ControllerBase
     {
         private readonly IChessService _chessService;
+        private readonly ChessDbContext _context;
 
-        public GamesController(IChessService chessService)
+        // Constructor accepting both dependencies
+        public GamesController(IChessService chessService, ChessDbContext context)
         {
             _chessService = chessService;
+            _context = context;
         }
 
         // GET: api/chess/games
@@ -83,44 +86,76 @@ namespace ChessBackend.Controllers
             }
         }
 
-        // POST: api/chess/move
-        [HttpPost("move")]
-public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] ChessBackend.Models.Move move)
+// POST: api/chess/move
+[HttpPost("move")]
+public IActionResult MakeMove([FromBody] MoveData moveData)
 {
-    try
+    // Validate the incoming data
+    if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
     {
-        // Fetch the game by its ID
-        var game = await _chessService.GetGameById(gameId);
-
-        if (game == null)
-        {
-            return NotFound(new { message = "Game not found." });
-        }
-
-        // Validate the move (ensure moveData exists and is valid)
-        if (move.MoveData == null || string.IsNullOrEmpty(move.MoveData.From) || string.IsNullOrEmpty(move.MoveData.To))
-        {
-            return BadRequest(new { message = "Invalid move data. 'from' and 'to' must be provided." });
-        }
-
-        var isValidMove = await _chessService.ValidateMove(gameId, move);
-
-        if (!isValidMove)
-        {
-            return BadRequest(new { message = "Invalid move." });
-        }
-
-        // Add the move to the game (this method should handle the logic for adding the move)
-        await _chessService.AddMove(gameId, move);
-
-        return Ok(new { message = "Move added successfully", game });
+        return BadRequest("Invalid move data.");
     }
-    catch (Exception ex)
+
+    // Fetch the game from the database
+    var game = _context.Games.Find(moveData.GameId);
+    if (game == null)
     {
-        // Return an error if something goes wrong
-        return StatusCode(500, new { message = "An error occurred while making the move.", error = ex.Message });
+        return NotFound("Game not found.");
     }
+
+    // Load the current game state using ChessDotNet.ChessGame
+    var chessGame = new ChessDotNet.ChessGame(game.Fen);
+
+    // Convert 'From' and 'To' to ChessDotNet.Position
+    var fromPosition = new ChessDotNet.Position(moveData.From);
+    var toPosition = new ChessDotNet.Position(moveData.To);
+
+    // Create the move using ChessDotNet.Move
+    var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
+
+    // Use MakeMove to validate and apply the move
+    ChessDotNet.MoveType moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
+    
+    // Check if the move was successfully applied
+    if (moveResult == ChessDotNet.MoveType.Invalid)
+    {
+        return BadRequest("Invalid move.");
+    }
+
+    // Update the game's FEN string
+    game.Fen = chessGame.GetFen();
+
+    // Create a new database move data record
+    var moveDataEntry = new MoveData
+    {
+        GameId = moveData.GameId,
+        From = moveData.From,
+        To = moveData.To
+    };
+
+    // Save MoveData to the database first
+    _context.MoveData.Add(moveDataEntry);  // Save the MoveData entry
+    _context.SaveChanges();  // Ensure MoveData gets an Id assigned
+
+    // Create a new Move record that references the MoveData
+    var moveEntry = new ChessBackend.Models.Move
+    {
+        GameId = moveData.GameId,
+        MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order for the game
+        MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
+        PlayedAt = DateTime.UtcNow // Assign the current timestamp
+    };
+
+    // Save the Move to the database
+    _context.Moves.Add(moveEntry);
+
+    // Save the updated game state to the database
+    _context.SaveChanges();
+
+    // Return the updated FEN to the frontend
+    return Ok(new { success = true, fen = game.Fen });
 }
+
 
 
         // POST: api/chess/games
@@ -144,7 +179,7 @@ public async Task<IActionResult> MakeMove([FromQuery] int gameId, [FromBody] Che
         }
 
     
-/// POST: api/chess/start/{userId}
+// POST: api/chess/start/{userId}
 [HttpPost("start/{userId}")]
 public async Task<IActionResult> StartNewGame(int userId)
 {
@@ -160,6 +195,12 @@ public async Task<IActionResult> StartNewGame(int userId)
         // Start the game using the userId
         var newGame = await _chessService.StartNewGame(userId);
 
+        // Check if the game was successfully created
+        if (newGame == null)
+        {
+            return StatusCode(500, new { message = "Could not start a new game." });
+        }
+
         // Return the newly created game, using CreatedAtAction to return the location of the new resource
         return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
     }
@@ -174,6 +215,7 @@ public async Task<IActionResult> StartNewGame(int userId)
         return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
     }
 }
+
 
 
 
