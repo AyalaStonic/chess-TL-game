@@ -1,3 +1,31 @@
+
+
+<!-- User Management -->
+<div class="user-controls">
+  <label for="username"></label>
+  <div class="input-container">
+    <input
+      type="text"
+      id="username"
+      [(ngModel)]="username"
+      placeholder="Enter your username"
+    />
+  </div>
+
+  <div class="button-container">
+    <button class="user-button create-btn" (click)="createUser()">Create User</button>
+
+    <!-- Conditionally show the Log In button only when the user is not logged in -->
+    <button *ngIf="!currentUser" class="user-button login-btn" (click)="loginUser()">Log In</button>
+    
+    <!-- Conditionally show the Log Out button only when the user is logged in -->
+    <button *ngIf="currentUser" class="user-button logout-btn" (click)="logout()">Logout</button>
+  </div>
+</div>
+
+
+
+<!-- Chessboard container -->
 <div class="chessboard">
   <!-- Render the chessboard -->
   <div *ngFor="let row of boardState; let rowIndex = index" class="row">
@@ -18,6 +46,7 @@
         [alt]="cell | uppercase"
         class="chess-piece"
       />
+      
     </div>
   </div>
 </div>
@@ -33,39 +62,4 @@
   <div *ngIf="invalidMoveMessage" class="error-message">
     {{ invalidMoveMessage }}
   </div>
-</div>
-
-<!-- Game Selector -->
-<div class="game-selector">
-  <label for="gameSelect">Select Game:</label>
-  <select
-    id="gameSelect"
-    [(ngModel)]="gameId"
-    (change)="loadGameState()"
-    [disabled]="!games || games.length === 0"
-  >
-    <!-- Use `games || []` to avoid errors when games is null -->
-    <option *ngFor="let game of games || []" [value]="game.id">
-      Game #{{ game.id }} ({{ game.dateCreated | date: 'short' }})
-    </option>
-  </select>
-</div>
-
-<!-- Replay Game Button -->
-<div class="replay-controls">
-  <button *ngIf="currentGame" (click)="replayGame()">Replay Game</button>
-</div>
-
-<!-- User Management -->
-<div class="user-controls">
-  <label for="username">Username:</label>
-  <input
-    type="text"
-    id="username"
-    [(ngModel)]="username"
-    placeholder="Enter your username"
-  />
-  <button (click)="createUser()">Create User</button>
-  <button (click)="loginUser()">Log In</button>
-  <button *ngIf="currentUser" (click)="logout()">Logout</button>
 </div>

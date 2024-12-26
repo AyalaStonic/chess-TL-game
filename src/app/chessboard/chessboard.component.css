@@ -1,15 +1,18 @@
+
+
 /* Chessboard container */
 .chessboard {
   display: grid;
-  grid-template-columns: repeat(8, 12vw); 
-  grid-template-rows: repeat(8, 12vw);    
+  grid-template-columns: repeat(8, 80px); /* Fixed size for each square */
+  grid-template-rows: repeat(8, 80px); /* Fixed size for each square */
   gap: 0;
-  border: 5px solid #333;                 
-  border-radius: 12px;                   
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); 
-  background: linear-gradient(135deg, #f7f7f7 25%, #ddd 75%); 
+  border: 5px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #f7f7f7 25%, #ddd 75%);
   margin: 20px auto;
-  max-width: 96vw; 
+  width: fit-content; /* Makes the container width based on content */
+  height: fit-content; /* Makes the container height based on content */
 }
 
 /* Square styling */
@@ -18,8 +21,8 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth hover transition */
-  position: relative; /* For absolute positioning of icons */
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -27,38 +30,39 @@
 
 /* Light and dark squares */
 .square.light {
-  background-color: #f5f5f5; /* Soft light square color */
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle inset shadow */
+  background-color: #f5f5f5;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .square.dark {
-  background-color: #354c8c; /* Modern dark square color */
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2); /* Enhanced contrast shadow */
+  background-color: #354c8c;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 /* Hover effect on squares */
 .square:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Subtle highlight */
-  transform: scale(1.05); /* Slight zoom effect */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Depth effect */
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Highlight selected square */
 .square.selected {
-  border: 3px solid rgba(255, 255, 0, 0.8); /* Bright yellow border */
-  background-color: rgba(255, 255, 0, 0.2); /* Semi-transparent highlight */
-  transform: scale(1.1); /* Slight zoom for emphasis */
-  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); /* Glow effect */
+  border: 3px solid rgba(255, 255, 0, 0.8);
+  background-color: rgba(255, 255, 0, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
 }
 
 /* Image pieces inside squares */
 .square img {
   width: 70%;
   height: 70%;
-  object-fit: contain; /* Ensure images maintain aspect ratio */
-  pointer-events: none; /* Disable interaction */
-  transition: transform 0.3s ease; /* Smooth movement transition */
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 0.3s ease;
 }
+
 
 /* Controls container */
 .controls {
@@ -69,6 +73,11 @@
   justify-content: center;
   gap: 20px;
   font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 50%, #d9d9d9 100%);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 1s ease-in-out;
 }
 
 /* Buttons */
@@ -76,90 +85,161 @@ button {
   padding: 12px 24px;
   font-size: 18px;
   font-weight: bold;
-  background-color: #4caf50; /* Green button */
+  background-color: #1e3a8a; /* Dark Blue */
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
 }
 
 button:hover {
-  background-color: #45a049; /* Darker hover */
-  transform: translateY(-2px); /* Lift effect */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Elevated shadow */
+  background-color: #2563eb; /* Lighter Blue */
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 button:disabled {
-  background-color: #ccc; /* Disabled state */
+  background-color: #a1a1a1; /* Grey */
   color: #666;
   cursor: not-allowed;
 }
 
-/* Error message */
-.error-message {
-  color: #e74c3c; /* Bright red */
-  margin-top: 10px;
+/* User controls container */
+.user-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #1e3a8a, #354c8c);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: white;
+  width: 100%;
+  max-width: 400px;
+  margin: 40px auto;
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Input container */
+.input-container {
+  margin-bottom: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+input {
+  width: 80%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: white;
+  color: #333;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus {
+  border-color: #1e3a8a;
+  box-shadow: 0 0 8px rgba(30, 58, 138, 0.5);
+}
+
+/* Button container */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  align-items: center;
+}
+
+/* Button styles */
+button {
+  width: 80%;
+  padding: 12px;
   font-size: 16px;
   font-weight: bold;
-}
-
-/* Replay controls */
-.replay-controls {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.replay-controls button {
-  background-color: #3498db; /* Blue color for replay */
+  background-color: #1e3a8a; /* Dark Blue */
+  color: white;
   border: none;
   border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 18px;
-  color: white;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
 }
 
-.replay-controls button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+button:hover {
+  background-color: #2563eb; /* Lighter Blue */
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Game selector */
-.game-selector {
-  margin: 20px 0;
-  text-align: center;
+button:disabled {
+  background-color: #a1a1a1; /* Grey */
+  color: #666;
+  cursor: not-allowed;
 }
 
-.game-selector select {
-  font-size: 16px;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  transition: border-color 0.3s ease;
+/* Button special styles */
+.user-button.create-btn {
+  background-color: #1e3a8a;
 }
 
-.game-selector select:focus {
-  outline: none;
-  border-color: #3498db; /* Highlight on focus */
+.user-button.create-btn:hover {
+  background-color: #2563eb;
 }
 
-/* User input styling */
-.user-controls input {
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
+.user-button.login-btn {
+  background-color: #3498db;
 }
 
-.user-controls input:focus {
-  border-color: #4caf50; /* Green outline on focus */
-  outline: none;
+.user-button.login-btn:hover {
+  background-color: #2980b9;
 }
 
-.user-controls button {
-  margin-left: 10px;
+.user-button.logout-btn {
+  background-color: #e74c3c;
+}
+
+.user-button.logout-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Animation for fade-in effect */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+
+/* Animation for fade-in effect */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Button hover effect animation */
+@keyframes hoverEffect {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }

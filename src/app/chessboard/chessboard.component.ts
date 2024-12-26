@@ -66,9 +66,9 @@ export class ChessboardComponent implements OnInit {
       alert('Please enter a valid username.');
       return;
     }
-
+  
     const user = { username: this.username.trim() };
-
+  
     this.chessService.loginUser(user).subscribe(
       (response: any) => {
         if (response.user && response.user.id) {
@@ -228,6 +228,8 @@ export class ChessboardComponent implements OnInit {
       }
     );
   }
+
+  
   
   
 
@@ -288,8 +290,8 @@ export class ChessboardComponent implements OnInit {
     return piece && pieceMap[piece] ? `/chess-pieces/${pieceMap[piece]}.png` : '';
   }
 
-  logout() {
-    this.currentUser = null;
+  logout(): void {
+    this.currentUser = false;
     this.games = [];
     this.currentGame = null;
     this.gameId = null;
