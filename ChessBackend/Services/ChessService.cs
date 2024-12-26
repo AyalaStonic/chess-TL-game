@@ -107,13 +107,16 @@ namespace ChessBackend.Services
 }
 
 
-   public async Task<Game> StartNewGame(int userId)
+public async Task<Game> StartNewGame(int userId)
 {
     // Ensure the user exists before starting the game
     if (!await UserExists(userId))
     {
         throw new Exception("User not found");
     }
+
+    // Set the initial Fen string to represent the standard starting chessboard position
+    string initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";  // Standard FEN for the starting position
 
     // Create a new game object
     var newGame = new Game
@@ -122,8 +125,7 @@ namespace ChessBackend.Services
         Status = "In Progress",
         CreatedAt = DateTime.UtcNow,
         UserId = userId,
-        // Set the initial Fen string to represent the standard starting chessboard position
-       Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"   // Standard FEN for the starting position
+        Fen = initialFen
     };
 
     // Add the newly created game to the database
@@ -131,6 +133,63 @@ namespace ChessBackend.Services
 
     return newGame;
 }
+
+private bool IsValidFen(string fen)
+{
+    var parts = fen.Split(' ');
+    if (parts.Length != 6)
+    {
+        return false; // There should be exactly 6 parts (board state, turn, castling, en passant, half-move, full-move)
+    }
+
+    var board = parts[0];
+    var ranks = board.Split('/');
+    if (ranks.Length != 8) return false;  // The board must have 8 ranks
+
+    foreach (var rank in ranks)
+    {
+        int rankLength = 0;
+        foreach (char c in rank)
+        {
+            if (char.IsDigit(c))
+            {
+                rankLength += (int)char.GetNumericValue(c);  // Add the number of empty squares
+            }
+            else if ("rnbqkRNBQK".Contains(c))  // Valid piece characters
+            {
+                rankLength++;
+            }
+            else
+            {
+                return false;  // Invalid character found
+            }
+        }
+
+        if (rankLength != 8) return false;  // Each rank must have exactly 8 squares
+    }
+
+    // Check for valid turn and other parts (w or b for turn, KQkq for castling, etc.)
+    if (!new[] { "w", "b" }.Contains(parts[1])) return false;  // Turn to move (white or black)
+    if (!IsValidCastling(parts[2])) return false;  // Castling rights (KQkq)
+    if (!string.IsNullOrEmpty(parts[3]) && parts[3] != "-") return false;  // En passant target (should be '-' or valid square)
+    if (int.TryParse(parts[4], out int halfMove) && halfMove < 0) return false;  // Half-move clock
+    if (int.TryParse(parts[5], out int fullMove) && fullMove < 1) return false;  // Full-move number
+
+    return true;
+}
+
+private bool IsValidCastling(string castling)
+{
+    foreach (var c in castling)
+    {
+        if (!"KQkq".Contains(c))
+        {
+            return false;  // Invalid castling rights
+        }
+    }
+    return true;
+}
+
 
    public async Task AddGame(Game game)
 {

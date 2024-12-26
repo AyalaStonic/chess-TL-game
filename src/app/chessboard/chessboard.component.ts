@@ -149,18 +149,24 @@ export class ChessboardComponent implements OnInit {
   getSquareClass(rowIndex: number, colIndex: number): string {
     const isLightSquare = (rowIndex + colIndex) % 2 === 0;
     return isLightSquare ? 'light' : 'dark';
-  }
-
+  }// Converts the FEN string to a 2D array representing the chessboard
   convertFENToBoard(fen: string): string[][] {
+    // Split FEN string into rows, using '/' as separator
     const rows = fen.split(' ')[0].split('/');
+    
+    // Map each row to a board row
     return rows.map((row) => {
       const boardRow: string[] = [];
+      
+      // Loop through each character in the row
       for (const char of row) {
         if (isNaN(Number(char))) {
+          // If it's a piece (non-numeric), add it to the board row
           boardRow.push(char);
         } else {
+          // If it's a number, it represents empty squares
           for (let i = 0; i < Number(char); i++) {
-            boardRow.push('');
+            boardRow.push(''); // Add empty squares
           }
         }
       }
@@ -168,18 +174,23 @@ export class ChessboardComponent implements OnInit {
     });
   }
 
+  // Handles a click on a square on the chessboard
   onSquareClick(rowIndex: number, colIndex: number) {
-    const square = this.getSquareFromIndices(rowIndex, colIndex);
+    const square = this.getSquareFromIndices(rowIndex, colIndex);  // Get square notation (e.g., "a1")
 
     if (this.selectedSquare) {
+      // If a square is already selected, attempt to make a move
       this.makeMove(this.selectedSquare, square);
-      this.selectedSquare = null;
+      this.selectedSquare = null; // Deselect after move
     } else {
+      // Otherwise, select the square
       this.selectedSquare = square;
     }
   }
 
+  // Converts row and column indices to chess notation (e.g., row 0, col 0 => "a8")
   getSquareFromIndices(rowIndex: number, colIndex: number): string {
+    // Convert column index to letter (0 => 'a', 1 => 'b', etc.)
     return `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
   }
 

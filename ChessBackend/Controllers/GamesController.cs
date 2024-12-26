@@ -107,6 +107,15 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
             return NotFound("Game not found.");
         }
 
+        // Log the FEN string for debugging purposes
+        Console.WriteLine("Before Move - FEN: " + game.Fen);  // Log the FEN string before move
+
+        // Validate FEN format: It should have 8 ranks separated by "/"
+        if (!IsValidFen(game.Fen))
+        {
+            return BadRequest("Invalid FEN format.");
+        }
+
         // Load the current game state using ChessDotNet.ChessGame
         var chessGame = new ChessDotNet.ChessGame(game.Fen);
 
@@ -119,12 +128,15 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
 
         // Use MakeMove to validate and apply the move
         ChessDotNet.MoveType moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
-        
+
         // Check if the move was successfully applied
         if (moveResult == ChessDotNet.MoveType.Invalid)
         {
             return BadRequest("Invalid move.");
         }
+
+        // Log the FEN string after the move is applied
+        Console.WriteLine("After Move - FEN: " + chessGame.GetFen());  // Log the updated FEN after the move
 
         // Update the game's FEN string
         game.Fen = chessGame.GetFen();
@@ -161,10 +173,41 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
     }
     catch (Exception ex)
     {
-        // Log any errors
-        _logger.LogError(ex, "Error in MakeMove.");
+        // Handle errors and log them
         return StatusCode(500, "Internal Server Error: " + ex.Message);
     }
+}
+
+
+// FEN validation method
+private bool IsValidFen(string fen)
+{
+    var ranks = fen.Split('/');
+    if (ranks.Length != 8) return false;  // Must have exactly 8 ranks
+
+    foreach (var rank in ranks)
+    {
+        int rankLength = 0;
+        foreach (char c in rank)
+        {
+            if (char.IsDigit(c))
+            {
+                rankLength += (int)char.GetNumericValue(c);  // Add the number of empty squares
+            }
+            else if ("rnbqkRNBQK".Contains(c))  // Check for valid piece
+            {
+                rankLength++;
+            }
+            else
+            {
+                return false;  // Invalid character in FEN string
+            }
+        }
+
+        if (rankLength != 8) return false;  // Each rank must have exactly 8 squares
+    }
+
+    return true;
 }
 
 
