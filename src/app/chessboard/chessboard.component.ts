@@ -209,7 +209,7 @@ export class ChessboardComponent implements OnInit {
       return;
     }
   
-    // Proceed with the move
+    // Proceed with the move, send to the backend for validation
     this.chessService.makeMove(this.gameId, from, to).subscribe(
       (response) => {
         // Update the board state after a valid move
@@ -228,6 +228,7 @@ export class ChessboardComponent implements OnInit {
       }
     );
   }
+  
   
 
   getPieceFromSquare(square: string): string | null {

@@ -107,29 +107,28 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
             return NotFound("Game not found.");
         }
 
-        // Step 4: Initialize ChessDotNet game with FEN
+        // Step 3: Initialize ChessDotNet game with FEN
         var chessGame = new ChessDotNet.ChessGame(game.Fen);
 
-        // Step 5: Convert 'From' and 'To' to ChessDotNet.Position
+        // Step 4: Create a ChessDotNet.Move object
         var fromPosition = new ChessDotNet.Position(moveData.From);
         var toPosition = new ChessDotNet.Position(moveData.To);
-
-        // Step 6: Create the move using ChessDotNet.Move
         var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
 
-        // Step 7: Validate and apply the move
-        var moveResult = chessGame.MakeMove(chessMove, true);  // 'true' for alreadyValidated flag
+        // Step 5: Apply the move (ChessDotNet will automatically reject invalid moves)
+        var moveResult = chessGame.MakeMove(chessMove, false); // Second argument is set to false for validation
+
+        // Check if the move was valid (MoveType.Invalid indicates failure)
         if (moveResult == ChessDotNet.MoveType.Invalid)
         {
-            Console.WriteLine("Move rejected by ChessDotNet.");
             return BadRequest("Invalid move.");
         }
 
-        // Step 8: Update the FEN string after the move
+        // Step 6: Update the FEN string after the move
         game.Fen = chessGame.GetFen();
         Console.WriteLine("After Move - FEN: " + game.Fen);
 
-        // Step 9: Create and save a new MoveData entry
+        // Step 7: Create and save a new MoveData entry
         var moveDataEntry = new MoveData
         {
             GameId = moveData.GameId,
@@ -140,7 +139,7 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
         _context.MoveData.Add(moveDataEntry);
         _context.SaveChanges();
 
-        // Step 10: Create and save a new Move entry
+        // Step 8: Create and save a new Move entry
         var moveEntry = new ChessBackend.Models.Move
         {
             GameId = moveData.GameId,
@@ -151,10 +150,10 @@ public IActionResult MakeMove([FromBody] MoveData moveData)
 
         _context.Moves.Add(moveEntry);
 
-        // Step 11: Save the updated game state to the database
+        // Step 9: Save the updated game state to the database
         _context.SaveChanges();
 
-        // Step 12: Return the updated FEN to the frontend
+        // Step 10: Return the updated FEN to the frontend
         return Ok(new { success = true, fen = game.Fen });
     }
     catch (Exception ex)
