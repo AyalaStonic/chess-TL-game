@@ -7,6 +7,8 @@ using System;
 using System.Threading.Tasks;
 using ChessDotNet;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace ChessBackend.Controllers
 {
@@ -89,122 +91,81 @@ namespace ChessBackend.Controllers
             }
         }
 
-[HttpPost("move")]
-public IActionResult MakeMove([FromBody] MoveData moveData)
-{
-    try
-    {
-        // Step 1: Validate the incoming data
-        if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
+        // POST: api/chess/move
+        [HttpPost("move")]
+        public IActionResult MakeMove([FromBody] MoveData moveData)
         {
-            return BadRequest("Invalid move data.");
-        }
-
-        // Step 2: Fetch the game from the database
-        var game = _context.Games.Find(moveData.GameId);
-        if (game == null)
-        {
-            return NotFound("Game not found.");
-        }
-
-        // Step 3: Initialize ChessDotNet game with FEN
-        var chessGame = new ChessDotNet.ChessGame(game.Fen);
-
-        // Step 4: Create a ChessDotNet.Move object
-        var fromPosition = new ChessDotNet.Position(moveData.From);
-        var toPosition = new ChessDotNet.Position(moveData.To);
-        var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
-
-        // Step 5: Apply the move (ChessDotNet will automatically reject invalid moves)
-        var moveResult = chessGame.MakeMove(chessMove, false); // Second argument is set to false for validation
-
-        // Check if the move was valid (MoveType.Invalid indicates failure)
-        if (moveResult == ChessDotNet.MoveType.Invalid)
-        {
-            return BadRequest("Invalid move.");
-        }
-
-        // Step 6: Update the FEN string after the move
-        game.Fen = chessGame.GetFen();
-        Console.WriteLine("After Move - FEN: " + game.Fen);
-
-        // Step 7: Create and save a new MoveData entry
-        var moveDataEntry = new MoveData
-        {
-            GameId = moveData.GameId,
-            From = moveData.From,
-            To = moveData.To
-        };
-
-        _context.MoveData.Add(moveDataEntry);
-        _context.SaveChanges();
-
-        // Step 8: Create and save a new Move entry
-        var moveEntry = new ChessBackend.Models.Move
-        {
-            GameId = moveData.GameId,
-            MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order
-            MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
-            PlayedAt = DateTime.UtcNow
-        };
-
-        _context.Moves.Add(moveEntry);
-
-        // Step 9: Save the updated game state to the database
-        _context.SaveChanges();
-
-        // Step 10: Return the updated FEN to the frontend
-        return Ok(new { success = true, fen = game.Fen });
-    }
-    catch (Exception ex)
-    {
-        // Log the error and return a 500 status code
-        Console.WriteLine("Error: " + ex.Message);
-        return StatusCode(500, "Internal Server Error: " + ex.Message);
-    }
-}
-
-// FEN validation method
-private bool IsValidFen(string fen)
-{
-    try
-    {
-        var ranks = fen.Split('/');
-        if (ranks.Length != 8) return false;  // Must have exactly 8 ranks
-
-        foreach (var rank in ranks)
-        {
-            int rankLength = 0;
-            foreach (char c in rank)
+            try
             {
-                if (char.IsDigit(c))
+                // Step 1: Validate the incoming data
+                if (moveData == null || string.IsNullOrEmpty(moveData.From) || string.IsNullOrEmpty(moveData.To))
                 {
-                    rankLength += (int)char.GetNumericValue(c);  // Add the number of empty squares
+                    return BadRequest("Invalid move data.");
                 }
-                else if ("rnbqkpRNBQKP".Contains(c))  // Check for valid piece characters
+
+                // Step 2: Fetch the game from the database
+                var game = _context.Games.Find(moveData.GameId);
+                if (game == null)
                 {
-                    rankLength++;
+                    return NotFound("Game not found.");
                 }
-                else
+
+                // Step 3: Initialize ChessDotNet game with FEN
+                var chessGame = new ChessDotNet.ChessGame(game.Fen);
+
+                // Step 4: Create a ChessDotNet.Move object
+                var fromPosition = new ChessDotNet.Position(moveData.From);
+                var toPosition = new ChessDotNet.Position(moveData.To);
+                var chessMove = new ChessDotNet.Move(fromPosition, toPosition, chessGame.WhoseTurn);
+
+                // Step 5: Apply the move (ChessDotNet will automatically reject invalid moves)
+                var moveResult = chessGame.MakeMove(chessMove, false); // Second argument is set to false for validation
+
+                // Check if the move was valid (MoveType.Invalid indicates failure)
+                if (moveResult == ChessDotNet.MoveType.Invalid)
                 {
-                    return false;  // Invalid character found
+                    return BadRequest("Invalid move.");
                 }
+
+                // Step 6: Update the FEN string after the move
+                game.Fen = chessGame.GetFen();
+                Console.WriteLine("After Move - FEN: " + game.Fen);
+
+                // Step 7: Create and save a new MoveData entry
+                var moveDataEntry = new MoveData
+                {
+                    GameId = moveData.GameId,
+                    From = moveData.From,
+                    To = moveData.To
+                };
+
+                _context.MoveData.Add(moveDataEntry);
+                _context.SaveChanges();
+
+                // Step 8: Create and save a new Move entry
+                var moveEntry = new ChessBackend.Models.Move
+                {
+                    GameId = moveData.GameId,
+                    MoveOrder = _context.Moves.Count(m => m.GameId == moveData.GameId) + 1, // Increment move order
+                    MoveDataId = moveDataEntry.Id, // Link to the saved MoveData
+                    PlayedAt = DateTime.UtcNow
+                };
+
+                _context.Moves.Add(moveEntry);
+
+                // Step 9: Save the updated game state to the database
+                _context.SaveChanges();
+
+                // Step 10: Return the updated FEN to the frontend
+                return Ok(new { success = true, fen = game.Fen });
             }
-
-            if (rankLength != 8) return false;  // Each rank must have exactly 8 squares
+            catch (Exception ex)
+            {
+                // Log the error and return a 500 status code
+                Console.WriteLine("Error: " + ex.Message);
+                return StatusCode(500, "Internal Server Error: " + ex.Message);
+            }
         }
-
-        return true;  // FEN is valid
-    }
-    catch
-    {
-        return false;  // Catch any parsing errors and return invalid
-    }
-}
-
-
-
-
 
         // POST: api/chess/games
         [HttpPost("games")]
@@ -226,47 +187,42 @@ private bool IsValidFen(string fen)
             }
         }
 
-    
-// POST: api/chess/start/{userId}
-[HttpPost("start/{userId}")]
-public async Task<IActionResult> StartNewGame(int userId)
-{
-    try
-    {
-        // Validate the user exists before starting a new game
-        var userExists = await _chessService.UserExists(userId);
-        if (!userExists)
+        // POST: api/chess/start/{userId}
+        [HttpPost("start/{userId}")]
+        public async Task<IActionResult> StartNewGame(int userId)
         {
-            return NotFound(new { message = "User not found." });
+            try
+            {
+                // Validate the user exists before starting a new game
+                var userExists = await _chessService.UserExists(userId);
+                if (!userExists)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                // Start the game using the userId
+                var newGame = await _chessService.StartNewGame(userId);
+
+                // Check if the game was successfully created
+                if (newGame == null)
+                {
+                    return StatusCode(500, new { message = "Could not start a new game." });
+                }
+
+                // Return the newly created game, using CreatedAtAction to return the location of the new resource
+                return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle specific exceptions such as invalid arguments
+                return BadRequest(new { message = "Invalid request.", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log and return a 500 status with error message in case of unexpected failures
+                return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
+            }
         }
-
-        // Start the game using the userId
-        var newGame = await _chessService.StartNewGame(userId);
-
-        // Check if the game was successfully created
-        if (newGame == null)
-        {
-            return StatusCode(500, new { message = "Could not start a new game." });
-        }
-
-        // Return the newly created game, using CreatedAtAction to return the location of the new resource
-        return CreatedAtAction(nameof(GetGame), new { id = newGame.Id }, newGame);
-    }
-    catch (ArgumentException ex)
-    {
-        // Handle specific exceptions such as invalid arguments
-        return BadRequest(new { message = "Invalid request.", error = ex.Message });
-    }
-    catch (Exception ex)
-    {
-        // Log and return a 500 status with error message in case of unexpected failures
-        return StatusCode(500, new { message = "Could not start a new game.", error = ex.Message });
-    }
-}
-
-
-
-
 
         // POST: api/chess/reset/{gameId}
         [HttpPost("reset/{gameId}")]
@@ -307,7 +263,40 @@ public async Task<IActionResult> StartNewGame(int userId)
             }
         }
 
-       [HttpPost("user")]
+     [HttpPost("undo/{gameId}")]
+public IActionResult UndoMove(int gameId)
+{
+    // Fetch the game from the database along with its moves
+    var game = _context.Games.Include(g => g.Moves).FirstOrDefault(g => g.Id == gameId);
+
+    // Check if the game exists and has any moves to undo
+    if (game == null || !game.Moves.Any())
+    {
+        return BadRequest("No moves to undo.");
+    }
+
+    // Get the last move from the moves list
+    var lastMove = game.Moves.Last();
+
+    // Remove the last move from the moves list
+    game.Moves.Remove(lastMove);
+
+    // Call the ChessService to undo the move and get the updated FEN
+    string newFEN = _chessService.UndoMove(game); // Implement logic for undoing a move in the ChessService
+
+    // Update the game's FEN with the new state
+    game.Fen = newFEN;
+
+    // Save the changes to the database
+    _context.SaveChanges();
+
+    // Return the updated FEN as part of the response
+    return Ok(new { fen = newFEN });
+}
+
+
+        // POST: api/chess/user
+        [HttpPost("user")]
         public async Task<IActionResult> AddUser([FromBody] User user)
         {
             if (user == null || string.IsNullOrWhiteSpace(user.Username))
@@ -358,46 +347,48 @@ public async Task<IActionResult> StartNewGame(int userId)
             }
         }
 
-   // POST: api/chess/user/login
-[HttpPost("user/login")]
-public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
-{
-    // Validate the request
-    if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Username))
-    {
-        return BadRequest(new { message = "Invalid login request. Username is required." });
-    }
-
-    try
-    {
-        // Attempt to fetch the user by username
-        var user = await _chessService.GetUserByUsername(loginRequest.Username);
-        if (user == null)
+        // POST: api/chess/user/login
+        [HttpPost("user/login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            return NotFound(new { message = "User not found." });
-        }
-
-        // Return user details (id and username) for successful login
-        return Ok(new
-        {
-            message = "Login successful.",
-            user = new
+            // Validate the request
+            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Username))
             {
-                id = user.Id,
-                username = user.Username
+                return BadRequest(new { message = "Invalid login request. Username is required." });
             }
-        });
-    }
-    catch (Exception ex)
-    {
-        // Log the exception (optional: use a logging service here)
-        Console.Error.WriteLine($"Error during login: {ex.Message}");
 
-        // Return a generic server error response
-        return StatusCode(500, new
-        {
-            message = "An error occurred while processing the login request.",
-            error = ex.Message
-        });
+            try
+            {
+                // Attempt to fetch the user by username
+                var user = await _chessService.GetUserByUsername(loginRequest.Username);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                // Return user details (id and username) for successful login
+                return Ok(new
+                {
+                    message = "Login successful.",
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.Username
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (optional: use a logging service here)
+                Console.Error.WriteLine($"Error during login: {ex.Message}");
+
+                // Return a generic server error response
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while processing the login request.",
+                    error = ex.Message
+                });
+            }
+        }
     }
-}}}
+}

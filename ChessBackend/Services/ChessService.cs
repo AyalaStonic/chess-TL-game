@@ -8,6 +8,9 @@ using ChessDotNet;
 using ChessBackendMove = ChessBackend.Models.Move; // Alias for the backend Move class
 using ChessDotNetMove = ChessDotNet.Move; // Alias for ChessDotNet Move class
 
+
+
+
 namespace ChessBackend.Services
 {
     public class ChessService : IChessService
@@ -105,6 +108,95 @@ namespace ChessBackend.Services
         await insertMoveCommand.ExecuteNonQueryAsync();
     }
 }
+
+
+ public string UndoMove(Game game)
+    {
+        // Fetch the game from the database
+        string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+        string query = @"
+            SELECT TOP 1 * FROM Games WHERE Id = @GameId;
+            SELECT * FROM Moves WHERE GameId = @GameId ORDER BY Id DESC;";
+
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@GameId", game.Id);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    if (!reader.Read())
+                    {
+                        return "Game not found."; // No game found
+                    }
+
+                    var gameFen = reader["Fen"].ToString();
+
+                    // Move to the next result set to read the moves
+                    if (!reader.NextResult())
+                    {
+                        return "Error fetching moves."; // Error in fetching moves
+                    }
+
+                    var moves = new List<MoveData>();
+
+                    while (reader.Read())
+                    {
+                        var move = new MoveData
+                        {
+                            Id = (int)reader["Id"],
+                            GameId = (int)reader["GameId"],
+                            From = reader["From"].ToString(),
+                            To = reader["To"].ToString()
+                        };
+                        moves.Add(move);
+                    }
+
+                    if (moves.Count == 0)
+                    {
+                        return "No moves to undo."; // No moves to undo
+                    }
+
+                    var lastMove = moves.First();
+                    string deleteMoveQuery = "DELETE FROM Moves WHERE Id = @MoveId";
+                    using (var deleteCommand = new SqlCommand(deleteMoveQuery, connection))
+                    {
+                        deleteCommand.Parameters.AddWithValue("@MoveId", lastMove.Id);
+                        deleteCommand.ExecuteNonQuery();
+                    }
+
+                    // Revert FEN: Remove the last move and update the game state
+                    var chessGame = new ChessDotNet.ChessGame(gameFen);
+
+                    // Attempt to undo the last move directly
+                    chessGame.Undo();
+
+                    var newFen = chessGame.GetFen();
+
+                    // Update the game state in the database
+                    string updateGameQuery = "UPDATE Games SET Fen = @Fen WHERE Id = @GameId";
+                    using (var updateCommand = new SqlCommand(updateGameQuery, connection))
+                    {
+                        updateCommand.Parameters.AddWithValue("@Fen", newFen);
+                        updateCommand.Parameters.AddWithValue("@GameId", game.Id);
+                        updateCommand.ExecuteNonQuery();
+                    }
+
+                    return newFen;
+                }
+            }
+        }
+    }
+
+
+
+
+
+
 
 
 public async Task<Game> StartNewGame(int userId)

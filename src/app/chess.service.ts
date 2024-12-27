@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core'; 
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -16,22 +16,30 @@ export class ChessService {
     return this.http.get(`${this.apiUrl}/games/${userId}`);  // Fetch games by userId
   }
 
+  // Create a new user
   createUser(user: { username: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/user`, user);
-}
+  }
 
+  // Login user
   loginUser(user: { username: string }): Observable<any> {
-     return this.http.post(`${this.apiUrl}/user/login`, user);
-}
+    return this.http.post(`${this.apiUrl}/user/login`, user);
+  }
   
   // Get game by ID
   getGameById(gameId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/games/${gameId}`);  // Fetch game details by ID
   }
 
+  // Get all games for a specific user
   getGamesByUserId(userId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
   }
+
+  undoMove(gameId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/games/undo/${gameId}`, {});
+  }
+  
 
   // Create a new game
   createGame(game: any): Observable<any> {
@@ -58,19 +66,18 @@ export class ChessService {
     return this.http.put(`${this.apiUrl}/update`, game);
   }
 
+  // Make a move in the game
   makeMove(gameId: number, from: string, to: string): Observable<any> {
     const moveData = {
       gameId: gameId,
       from: from,
       to: to
     };
-  
+
     // Send the move data to the backend
     return this.http.post(`${this.apiUrl}/move`, moveData);
   }
-  
-  
-  
+
   // Get all moves for a specific game
   getMoves(gameId: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/moves/${gameId}`);

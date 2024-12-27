@@ -58,6 +58,24 @@
   <button (click)="loadGames()">Load Games</button>
   <button [disabled]="!currentGame" (click)="saveGame()">Save Game</button>
 
+<!-- Load and Replay Game Section -->
+<div class="load-game">
+  <h3>Load a Game</h3>
+  <select [(ngModel)]="selectedGameId" (change)="loadSelectedGame()">
+    <option value="">Select a Game</option>
+    <option *ngFor="let game of games" [value]="game.id">{{ game.name }}</option>
+  </select>
+  <button (click)="replayGame()">Replay Game</button>
+</div>
+
+<!-- Undo Move Section -->
+<div class="undo-move">
+  <h3>Undo Last Move</h3>
+  <button (click)="undoMove()">Undo Move</button>
+</div>
+
+
+
   <!-- Error Message for Invalid Moves -->
   <div *ngIf="invalidMoveMessage" class="error-message">
     {{ invalidMoveMessage }}

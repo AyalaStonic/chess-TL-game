@@ -22,6 +22,7 @@ export class ChessboardComponent implements OnInit {
   gameId: number | null = null;
   username: string = '';
   currentUser: any = null;
+  selectedGameId: number | null = null; 
 
   constructor(private chessService: ChessService, private http: HttpClient) {}
 
@@ -37,6 +38,7 @@ export class ChessboardComponent implements OnInit {
     // Convert the default FEN to a board state
     return this.convertFENToBoard(defaultFEN);
   }
+
 
   createUser(): void {
     if (!this.username.trim()) {
@@ -66,9 +68,9 @@ export class ChessboardComponent implements OnInit {
       alert('Please enter a valid username.');
       return;
     }
-  
+
     const user = { username: this.username.trim() };
-  
+
     this.chessService.loginUser(user).subscribe(
       (response: any) => {
         if (response.user && response.user.id) {
@@ -132,7 +134,28 @@ export class ChessboardComponent implements OnInit {
       );
     }
   }
-  
+
+  loadSelectedGame(): void {
+    if (this.selectedGameId === null) {
+      return; // Do nothing if no game is selected
+    }
+
+    this.gameId = this.selectedGameId;
+    this.chessService.getGameById(this.selectedGameId).subscribe(
+      (game) => {
+        this.currentGame = game;
+        if (game && game.fen) {
+          this.boardState = this.convertFENToBoard(game.fen);
+        } else {
+          console.error('FEN string missing in game data');
+          this.boardState = this.initializeBoardState();
+        }
+      },
+      (error: HttpErrorResponse) => {
+        console.error('Error loading selected game:', error);
+      }
+    );
+  }
 
   replayGame() {
     if (this.currentGame && this.currentGame.moves && Array.isArray(this.currentGame.moves)) {
@@ -160,7 +183,7 @@ export class ChessboardComponent implements OnInit {
       console.error('Invalid FEN string:', fen);
       return this.initializeBoardState();  // Fallback to default board state
     }
-  
+
     const rows = fen.split(' ')[0].split('/');
     return rows.map((row) => {
       const boardRow: string[] = [];
@@ -176,7 +199,6 @@ export class ChessboardComponent implements OnInit {
       return boardRow;
     });
   }
-  
 
   // Handles a click on a square on the chessboard
   onSquareClick(rowIndex: number, colIndex: number) {
@@ -198,9 +220,58 @@ export class ChessboardComponent implements OnInit {
     return `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
   }
 
+
+ undoMove(): void {
+    if (this.gameId === null || this.gameId === undefined) {
+      alert('No game selected. Please select a game to undo a move.');
+      return;
+    }
+  
+    if (this.currentGame && this.currentGame.moves && this.currentGame.moves.length > 0) {
+      // Log the moves for debugging
+      console.log('Current moves:', this.currentGame.moves);
+  
+      // Call backend service to undo the last move and get the updated game state
+      this.chessService.undoMove(this.gameId).subscribe(
+        (response: any) => {
+          // Log the response from the backend for debugging
+          console.log('Response from undoMove:', response);
+  
+          if (response && response.fen) {
+            // Update the board with the previous FEN string returned by the backend
+            this.boardState = this.convertFENToBoard(response.fen);
+  
+            // Update the currentGame FEN and moves from the response
+            this.currentGame.Fen = response.fen;
+            this.currentGame.moves = response.moves || []; // Update moves if returned
+  
+            // Log the updated game state
+            console.log('Updated game:', this.currentGame);
+  
+            alert('Last move undone successfully!');
+          } else {
+            console.error('Error: No FEN returned from backend.');
+            alert('Failed to undo the last move.');
+          }
+        },
+        (error) => {
+          console.error('Error undoing last move:', error);
+          alert('Failed to undo the last move.');
+        }
+      );
+    } else {
+      alert('No moves to undo!');  // If no moves in currentGame
+    }
+  }
+  
+
+  
+
+  
+
   makeMove(from: string, to: string) {
     if (this.gameId === null) return;
-  
+
     // Ensure the piece exists on the source square before making the move
     const piece = this.getPieceFromSquare(from);
     if (!piece) {
@@ -208,7 +279,7 @@ export class ChessboardComponent implements OnInit {
       console.error('Error: Source piece does not exist.');
       return;
     }
-  
+
     // Proceed with the move, send to the backend for validation
     this.chessService.makeMove(this.gameId, from, to).subscribe(
       (response) => {
@@ -228,10 +299,6 @@ export class ChessboardComponent implements OnInit {
       }
     );
   }
-
-  
-  
-  
 
   getPieceFromSquare(square: string): string | null {
     const colIndex = square.charCodeAt(0) - 97; // Convert column (e.g., 'a') to index
@@ -291,9 +358,29 @@ export class ChessboardComponent implements OnInit {
   }
 
   logout(): void {
-    this.currentUser = false;
+    // Reset board state to the initial board
+    this.boardState = this.initializeBoardState();
+  
+    // If there is a current game, save it before logging out
+    if (this.currentGame) {
+      this.chessService.saveGame(this.currentGame).subscribe(
+        () => {
+          // Clear the current game after saving
+          this.currentGame = null;
+          this.gameId = null;
+          alert('Game saved successfully!');
+        },
+        (error) => {
+          console.error('Error saving game:', error);
+          alert('Failed to save the game.');
+        }
+      );
+    }
+  
+    // Clear user-related data
+    this.currentUser = null;
     this.games = [];
-    this.currentGame = null;
     this.gameId = null;
   }
+  
 }
